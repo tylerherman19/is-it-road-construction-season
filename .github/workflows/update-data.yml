@@ -6,6 +6,7 @@ on:
     # ceiling rather than a promise; the site reports the real age of the data.
     - cron: "*/15 * * * *"
   workflow_dispatch:
+  # (touch) re-registered 2026-09-03 after the scheduler never fired.
 
 permissions:
   contents: write
