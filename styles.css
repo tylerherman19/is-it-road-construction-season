@@ -388,6 +388,52 @@ a { color: inherit; }
   .cms-head span { font-size: 11px; }
 }
 
+/* ---------------- record book ---------------- */
+.records-section { padding: 6px 0 46px; }
+.records-grid { display: grid; grid-template-columns: minmax(270px, 350px) 1fr; gap: 22px; align-items: start; }
+
+/* the headline plate: a workplace "days without incident" sign, white in both
+   themes because reflective sign faces are white in headlights */
+.record-sign {
+  background: #ffffff; color: #141416;
+  border: 3px solid #141416; border-radius: 7px;
+  box-shadow: var(--shadow), inset 0 0 0 3px #ffffff, inset 0 0 0 5px #141416;
+  text-align: center; overflow: hidden;
+}
+.record-sign-head {
+  background: var(--constr); color: #141416;
+  font-family: var(--sign); font-size: 13px; letter-spacing: .18em;
+  padding: 9px 10px 7px; border-bottom: 3px solid #141416;
+}
+.record-sign-body { padding: 16px 18px 20px; }
+.record-sign-road { font-family: var(--display); font-size: 20px; font-weight: 600; letter-spacing: -.01em; margin-bottom: 10px; }
+.record-sign-days { display: flex; align-items: center; justify-content: center; gap: 12px; }
+.record-sign-days #record-days { font-family: var(--sign); font-size: 66px; line-height: .95; }
+.record-sign-unit { font-family: var(--sign); font-size: 12px; letter-spacing: .14em; line-height: 1.35; text-align: left; }
+
+.record-board { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.record-row {
+  display: flex; align-items: baseline; gap: 11px;
+  padding: 10px 13px;
+  background: var(--surface); border: 1.5px solid var(--line-strong); border-radius: 5px;
+  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255,255,255,.18);
+}
+.record-rank { font-family: var(--sign); font-size: 15px; color: var(--text-3); flex: none; }
+.record-main { min-width: 0; }
+.record-name { font-size: 14.5px; font-weight: 600; }
+.record-meta { font-size: 12px; color: var(--text-3); margin-top: 1px; }
+.record-days-cell { margin-left: auto; flex: none; text-align: right; }
+.record-days-cell b { font-family: var(--sign); font-weight: 400; font-size: 21px; color: var(--text); }
+.record-days-cell span { display: block; font-family: var(--sign); font-size: 9.5px; letter-spacing: .14em; color: var(--text-3); }
+.record-cls { width: 9px; height: 9px; border-radius: 2px; transform: rotate(45deg); flex: none; align-self: center; }
+.record-cls[data-cls="closed"] { background: var(--closed); }
+.record-cls[data-cls="construction"] { background: var(--constr); }
+
+@media (max-width: 720px) {
+  .records-grid { grid-template-columns: 1fr; }
+  .record-sign-days #record-days { font-size: 56px; }
+}
+
 /* ---------------- section furniture ---------------- */
 .section-head { margin-bottom: 20px; }
 .section-head h2 {
@@ -713,4 +759,4 @@ footer p { margin: 0; font-size: 12.5px; color: var(--text-3); }
   .segmented button { flex: 1 1 0; padding: 7px 6px; }
   .brand-name { font-size: 13px; }
   .map-shell { height: 64vh; }
-          }
+}
