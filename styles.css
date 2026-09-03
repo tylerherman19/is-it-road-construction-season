@@ -299,43 +299,88 @@ a { color: inherit; }
   box-shadow: inset 0 1.5px 0 rgba(255,255,255,.35), var(--shadow-sm);
 }
 
-/* stat tiles */
-.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+/* ---------------- the tally sign ---------------- */
+/* The numbers are posted on a changeable message sign: black trailer cabinet,
+   bolted steel frame, amber dot-matrix LEDs. A display surface, not chrome. */
+.cms { max-width: 520px; margin: 10px 0 4px; }
 
-.stat {
+.cms-frame {
   position: relative;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--r-lg);
-  padding: 18px 18px 16px;
-  display: flex; flex-direction: column; gap: 2px;
+  background: linear-gradient(180deg, #3b3b41 0%, #2b2b30 55%, #222227 100%);
+  border-radius: 14px;
+  padding: 12px 12px 8px;
+  box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255,255,255,.14);
+}
+/* frame bolts */
+.cms-frame::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(circle 4.5px at 16px 16px, #cfcfd6 0 38%, #8a8a92 45% 62%, transparent 70%),
+    radial-gradient(circle 4.5px at calc(100% - 16px) 16px, #cfcfd6 0 38%, #8a8a92 45% 62%, transparent 70%),
+    radial-gradient(circle 4.5px at 16px calc(100% - 16px), #cfcfd6 0 38%, #8a8a92 45% 62%, transparent 70%),
+    radial-gradient(circle 4.5px at calc(100% - 16px) calc(100% - 16px), #cfcfd6 0 38%, #8a8a92 45% 62%, transparent 70%);
+}
+/* conspicuity strip along the lower frame edge */
+.cms-frame::after {
+  content: ""; display: block; height: 6px; margin: 8px 2px 0; border-radius: 2px;
+  background: repeating-linear-gradient(-45deg, #d97c0e 0 10px, #15130f 10px 20px);
+}
+
+.cms-screen {
+  position: relative;
+  background: #0d0b08;
+  border: 1px solid #000;
+  border-radius: 8px;
+  box-shadow: inset 0 2px 14px rgba(0,0,0,.75);
+  padding: 18px 22px 14px;
   overflow: hidden;
 }
-.stat::before {
-  content: ""; position: absolute; inset: 0 auto 0 0; width: 3px;
-  background: var(--accent-line, transparent);
+/* the field of unlit LEDs */
+.cms-screen::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background-image: radial-gradient(circle 1.1px at 2.2px 2.2px, rgba(255,176,60,.07) 0 1.1px, transparent 1.2px);
+  background-size: 4.4px 4.4px;
 }
-.stat[data-cls="closed"] { --accent-line: var(--closed); }
-.stat[data-cls="constr"] { --accent-line: var(--constr); }
-.stat[data-cls="soon"]   { --accent-line: var(--soon); }
+.cms-line {
+  position: relative;
+  display: flex; justify-content: space-between; align-items: baseline; gap: 14px;
+  padding: 4px 0;
+  font-family: "Doto", "Saira Stencil One", monospace;
+  color: #ffb43a;
+  text-shadow: 0 0 7px rgba(255,170,40,.5), 0 0 22px rgba(255,170,40,.2);
+}
+.cms-label { font-size: 14.5px; font-weight: 500; letter-spacing: .1em; color: rgba(255,180,58,.82); white-space: nowrap; }
+.cms-num { font-size: 31px; font-weight: 700; letter-spacing: .04em; }
+.cms-head { justify-content: center; border-bottom: 1px dotted rgba(255,180,58,.3); padding: 0 0 9px; margin-bottom: 7px; }
+.cms-head span { font-size: 12.5px; letter-spacing: .2em; color: rgba(255,180,58,.62); text-shadow: 0 0 6px rgba(255,170,40,.35); white-space: nowrap; }
 
-.stat-key {
-  display: inline-flex; align-items: center; gap: 7px;
-  font-size: 12px; font-weight: 600;
-  text-transform: uppercase; letter-spacing: .06em;
-  color: var(--text-2);
+/* the trailer underneath: post, tongue, hitch ball */
+.cms-trailer { position: relative; height: 42px; }
+.cms-post {
+  position: absolute; left: 50%; top: 0; transform: translateX(-50%);
+  width: 16px; height: 24px;
+  background: linear-gradient(90deg, #3d3d43, #26262b 60%);
+  border-radius: 0 0 3px 3px;
 }
-.stat-key .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-line, var(--text-3)); flex: none; }
-.stat-num {
-  font-size: clamp(38px, 5vw, 52px); font-weight: 600;
-  font-family: var(--display);
-  font-variant-numeric: tabular-nums;
-  line-height: 1.05; letter-spacing: -.02em;
-  margin-top: 6px;
+.cms-tongue {
+  position: absolute; left: 50%; top: 24px; transform: translateX(-50%);
+  width: 250px; max-width: 68%; height: 9px;
+  background: linear-gradient(180deg, #35353c, #1f1f24);
+  border-radius: 4px;
 }
-.stat-sub { font-size: 12.5px; color: var(--text-3); line-height: 1.4; }
-.stat-quiet { background: var(--surface-2); }
-.stat-quiet .stat-num { font-size: clamp(30px, 3.6vw, 38px); color: var(--text-2); }
+.cms-tongue::before {
+  content: ""; position: absolute; left: -6px; top: 50%; transform: translateY(-50%);
+  width: 11px; height: 11px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #5b5b63, #1b1b20 70%);
+}
+.cms-meta { margin: 4px 0 0 4px; font-size: 12px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+
+@media (max-width: 520px) {
+  .cms-screen { padding: 14px 14px 12px; }
+  .cms-label { font-size: 12.5px; }
+  .cms-num { font-size: 26px; }
+  .cms-head span { font-size: 11px; }
+}
 
 /* ---------------- section furniture ---------------- */
 .section-head { margin-bottom: 20px; }
@@ -648,11 +693,6 @@ footer p { margin: 0; font-size: 12.5px; color: var(--text-3); }
 }
 
 @media (max-width: 560px) {
-  .stats { grid-template-columns: 1fr 1fr; gap: 10px; }
-  .stat { padding: 14px; border-radius: var(--r-md); }
-  .stat-num { font-size: 34px; }
-  .stat-quiet { grid-column: 1 / -1; }
-  .stat-quiet .stat-num { margin-top: 2px; font-size: 24px; }
   .toolbar { flex-direction: column; align-items: stretch; }
   /* flex-basis is a height once the toolbar stacks, which left the search box
      sitting in 240px of empty space. */
