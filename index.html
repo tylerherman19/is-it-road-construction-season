@@ -19,7 +19,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Inter:wght@400;500;600;700&family=Saira+Stencil+One&family=Doto:wght@500;700&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20260903e">
+<link rel="stylesheet" href="styles.css?v=20260903f">
 </head>
 <body>
 
@@ -130,6 +130,26 @@
   </div>
 </section>
 
+<!-- ---------------- record book ---------------- -->
+<section class="records-section" id="records-section" aria-labelledby="records-title" hidden>
+  <div class="wrap">
+    <div class="section-head">
+      <h2 id="records-title">The record book</h2>
+      <p class="section-sub">Longest-running work still active out there. Day counts from the agencies&rsquo; own start dates, refreshed with the data.</p>
+    </div>
+    <div class="records-grid">
+      <div class="record-sign">
+        <div class="record-sign-head" id="record-sign-label">LONGEST ACTIVE CLOSURE</div>
+        <div class="record-sign-body">
+          <div class="record-sign-road" id="record-road">&ndash;</div>
+          <div class="record-sign-days"><span id="record-days">&ndash;</span><span class="record-sign-unit">DAYS AND<br>COUNTING</span></div>
+        </div>
+      </div>
+      <ol class="record-board" id="record-board"></ol>
+    </div>
+  </div>
+</section>
+
 <!-- ---------------- by radius ---------------- -->
 <section class="tally-section" aria-labelledby="tally-title">
   <div class="wrap">
@@ -204,6 +224,6 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-<script src="app.js?v=20260903e"></script>
+<script src="app.js?v=20260903f"></script>
 </body>
 </html>
