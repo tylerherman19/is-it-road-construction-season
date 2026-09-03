@@ -405,7 +405,8 @@
         '<span class="record-cls" data-cls="' + r.event_class + '"></span>' +
         '<div class="record-main">' +
           '<div class="record-name">' + esc(r.road) + "</div>" +
-          '<div class="record-meta">' + esc(r.source) + " &middot; " + fmtMi(r.distance_mi) +
+          '<div class="record-meta">' + esc(CLASSES[r.event_class] ? CLASSES[r.event_class].label : r.event_class) +
+            " &middot; " + esc(r.source) + " &middot; " + fmtMi(r.distance_mi) +
             " mi away &middot; since " + esc(r.since) + "</div>" +
         "</div>" +
         '<div class="record-days-cell"><b>' + r.days + "</b><span>" +
