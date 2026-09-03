@@ -182,13 +182,16 @@ a { color: inherit; }
 
 .pulse {
   display: inline-flex; align-items: center; gap: 7px;
-  font-size: 12.5px; font-weight: 500; color: var(--text-2);
-  padding: 5px 11px 5px 9px;
-  border: 1px solid var(--line); border-radius: 999px;
+  font-family: var(--sign);
+  font-size: 11.5px; font-weight: 400; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--text-2);
+  padding: 6px 11px 5px 9px;
+  border: 2px solid var(--line-strong); border-radius: 5px;
   background: var(--surface);
+  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255,255,255,.22);
   white-space: nowrap;
 }
-.pulse-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-3); flex: none; }
+.pulse-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-3); flex: none; box-shadow: inset 0 1px 1px rgba(255,255,255,.5), 0 0 0 1.5px rgba(0,0,0,.18); }
 .pulse[data-state="live"] .pulse-dot { background: #12a150; animation: breathe 2.6s ease-in-out infinite; }
 .pulse[data-state="stale"] .pulse-dot { background: var(--constr); }
 .pulse[data-state="error"] .pulse-dot { background: var(--closed); }
@@ -197,20 +200,23 @@ a { color: inherit; }
 .icon-btn {
   display: inline-grid; place-items: center;
   width: 32px; height: 32px; flex: none;
-  border: 1px solid var(--line); border-radius: var(--r-sm);
+  border: 2px solid var(--line-strong); border-radius: 5px;
   background: var(--surface); color: var(--text-2);
+  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255,255,255,.22);
   cursor: pointer;
   transition: background .15s, color .15s, border-color .15s;
 }
-.icon-btn:hover { background: var(--surface-2); color: var(--text); border-color: var(--line-strong); }
-.icon-moon { display: none; }
-:root[data-theme="dark"] .icon-sun,
-:root:not([data-theme="light"]) .icon-sun { display: none; }
-:root[data-theme="dark"] .icon-moon,
-:root:not([data-theme="light"]) .icon-moon { display: block; }
+.icon-btn:hover { background: var(--surface-2); color: var(--text); border-color: var(--text-3); }
+/* the toggle is a warning beacon: outline by day, lit amber after dark */
+.beacon-dome { fill: none; stroke: currentColor; stroke-width: 1.7; }
+.beacon-base { fill: currentColor; }
+:root[data-theme="dark"] .beacon-dome,
+:root:not([data-theme="light"]) .beacon-dome {
+  fill: var(--constr); stroke: none;
+  filter: drop-shadow(0 0 3.5px rgba(255,170,40,.75));
+}
 @media (prefers-color-scheme: light) {
-  :root:not([data-theme="dark"]) .icon-sun { display: block; }
-  :root:not([data-theme="dark"]) .icon-moon { display: none; }
+  :root:not([data-theme="dark"]) .beacon-dome { fill: none; stroke: currentColor; filter: none; }
 }
 
 /* ---------------- hero ---------------- */
