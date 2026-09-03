@@ -70,14 +70,25 @@ def year_dt(y, end_of=False):
     return (dt.datetime(y, 12, 31, 23, 59, tzinfo=dt.timezone.utc) if end_of
             else dt.datetime(y, 1, 1, tzinfo=dt.timezone.utc))
 
+# Fields that carry a real clock time rather than a calendar date. Everything else
+# an agency publishes as a date lands on midnight UTC, and the difference decides
+# which zone the page may format it in: an instant is the user's local moment, a
+# calendar date is the same day everywhere. Both kinds arrive as Esri epoch
+# milliseconds, so only the field name tells them apart.
+TIMED_DATE_FIELDS = {
+    "Srt_Date", "EndDate", "Startdt", "EndDt",   # Anoka closures
+    "StartDate",                                  # St. Paul closures (EndDate shared)
+    "CloseDateTime", "OpenDateTime",              # Carver closures
+}
+
 def field_dt(p, names, end_of=False):
-    """First parseable date among a list of candidate field names."""
-    if not names: return None
+    """First parseable date among candidate field names, plus whether it is timed."""
+    if not names: return None, False
     if isinstance(names, str): names = [names]
     for n in names:
         d = parse_dt(p.get(n), end_of=end_of)
-        if d is not None: return d
-    return None
+        if d is not None: return d, n in TIMED_DATE_FIELDS
+    return None, False
 
 def temporal(start, end, undated="season"):
     if end and end < NOW: return "expired"
@@ -126,6 +137,9 @@ def merge_into(ev, geom):
 def add_event(**kw):
     geom = kw.pop("geometry", None)
     if geom is None or geom.is_empty: return
+    # Calendar dates are the common case, so only the exceptions ride in the payload.
+    if not kw.pop("timed", False): kw.pop("timed", None)
+    else: kw["timed"] = True
     d = dist_mi(geom)
     if d is None or d > MAX_MI: return
     if kw.get("temporal") == "expired": return
@@ -228,7 +242,7 @@ def load_511():
         add_event(id=f"cars:{e.get('event-id')}", source="MnDOT 511", event_class=cls,
                   temporal=tmp, road=route or "State highway", description=desc,
                   start=start.isoformat() if start else None,
-                  end=end.isoformat() if end else None,
+                  end=end.isoformat() if end else None, timed=True,
                   url=f"https://511mn.org/event/{e.get('event-id')}", geometry=geom)
         if len(EVENTS) > before:
             seen[key] = len(EVENTS) - 1
@@ -255,7 +269,7 @@ def load_wzdx(data, degraded_from=None):
                   temporal=tmp, road=roads[0] if roads else "State highway",
                   description=core.get("description") or "",
                   start=start.isoformat() if start else None,
-                  end=end.isoformat() if end else None,
+                  end=end.isoformat() if end else None, timed=True,
                   url="https://511mn.org", geometry=geom)
         if len(EVENTS) > before: n += 1
     SOURCES_STATUS.append({"name": "MnDOT 511 (WZDx fallback)", "ok": True, "records": n,
@@ -279,19 +293,20 @@ def mirror_class(phrase):
     return None
 
 def mirror_date(dstr, tstr, end_of_day=False):
-    if not dstr: return None
+    """-> (datetime or None, whether it carries a real clock time)."""
+    if not dstr: return None, False
     try:
         base = dt.datetime.strptime(str(dstr), "%Y%m%d").replace(tzinfo=dt.timezone.utc)
     except ValueError:
-        return None
+        return None, False
     if tstr:
         try:
             t = dt.datetime.strptime(str(tstr).strip(), "%I:%M %p")
             # feed times are America/Chicago (UTC-5 in Sept, -6 in winter; approximate with -5/-6 by dst)
-            return base.replace(hour=t.hour, minute=t.minute) + dt.timedelta(hours=5)
+            return base.replace(hour=t.hour, minute=t.minute) + dt.timedelta(hours=5), True
         except ValueError:
             pass
-    return base + dt.timedelta(days=1 if end_of_day else 0)
+    return base + dt.timedelta(days=1 if end_of_day else 0), False
 
 def load_mirror(degraded_from=None):
     feats = arcgis_query(MIRROR_URL, buffer_m=BUF50)
@@ -305,8 +320,8 @@ def load_mirror(degraded_from=None):
         key = (p.get("ID"), phrase)
         if key in seen: continue
         seen.add(key)
-        start = mirror_date(p.get("IssueDate"), p.get("StartTime"))
-        end = mirror_date(p.get("ExpireDate"), p.get("EndTime"), end_of_day=True)
+        start, t1 = mirror_date(p.get("IssueDate"), p.get("StartTime"))
+        end, t2 = mirror_date(p.get("ExpireDate"), p.get("EndTime"), end_of_day=True)
         tmp = "upcoming" if p.get("STYLE") == "future_event" else temporal(start, end, undated="active")
         geom = feat_geom(f)
         if geom is None: continue
@@ -316,7 +331,7 @@ def load_mirror(degraded_from=None):
                   road=str(p.get("Route") or "State highway"),
                   description=str(p.get("headline") or ""),
                   start=start.isoformat() if start else None,
-                  end=end.isoformat() if end else None,
+                  end=end.isoformat() if end else None, timed=t1 or t2,
                   url=p.get("linktxt") if str(p.get("linktxt") or "").startswith("http") else None,
                   geometry=geom)
         if len(EVENTS) > before: n += 1
@@ -373,8 +388,9 @@ def add_arcgis(name, url, klass, road_fields, desc_fields, start_f, end_f,
     for f in feats:
         p = props(f)
         if skip_fn and skip_fn(p): continue
-        start = field_dt(p, start_f)
-        end = field_dt(p, end_f, end_of=True)
+        start, t1 = field_dt(p, start_f)
+        end, t2 = field_dt(p, end_f, end_of=True)
+        timed = t1 or t2
         tmp = temporal(start, end, undated=undated)
         geom = feat_geom(f)
         if geom is None: continue
@@ -404,6 +420,7 @@ def add_arcgis(name, url, klass, road_fields, desc_fields, start_f, end_f,
                   road=road, description=desc,
                   start=start.isoformat() if start else None,
                   end=end.isoformat() if end else None,
+                  timed=timed,
                   url=link if isinstance(link, str) and link.startswith("http") else None,
                   geometry=geom)
         if len(EVENTS) > before:

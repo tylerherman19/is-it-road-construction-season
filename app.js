@@ -75,13 +75,19 @@
     return date + ", " + time + " CT";
   }
 
-  // Project dates are calendar dates the agencies store at UTC midnight, not real
-  // instants. Rendering them in Central time moves every one of them back a day,
-  // which is how a project starting 1 Jan 2025 came out as "Dec 31, 2024".
-  function fmtDay(iso) {
+  // Two kinds of date arrive here and they need different zones. Most agencies
+  // publish a calendar date, stored at UTC midnight: rendering that in Central time
+  // moves it back a day, which is how a project starting 1 Jan 2025 came out as
+  // "Dec 31, 2024". But MnDOT 511 and the closure layers publish real instants, and
+  // an overnight closure beginning 00:00 UTC starts at 7pm the evening before — for
+  // those, Central is the only honest answer. The builder marks which is which,
+  // because both reach us as epoch milliseconds and the value alone cannot say.
+  function fmtDay(iso, timed) {
     var d = new Date(iso);
     if (isNaN(d)) return null;
-    return d.toLocaleDateString("en-US", { timeZone: "UTC", month: "short", day: "numeric", year: "numeric" });
+    return d.toLocaleDateString("en-US", {
+      timeZone: timed ? CT : "UTC", month: "short", day: "numeric", year: "numeric"
+    });
   }
 
   function ago(iso) {
@@ -417,8 +423,8 @@
   }
 
   function dateLine(e) {
-    var s = e.start ? fmtDay(e.start) : null;
-    var en = e.end ? fmtDay(e.end) : null;
+    var s = e.start ? fmtDay(e.start, e.timed) : null;
+    var en = e.end ? fmtDay(e.end, e.timed) : null;
     if (s && en) return s + " – " + en;
     if (en) return "through " + en;
     if (s) return "from " + s;
@@ -679,14 +685,26 @@
     }
   }
 
-  function centroid(geom) {
-    if (!geom) return null;
-    var pts = [];
-    (function walk(c, depth) {
+  // A GeometryCollection carries its parts in `geometries` and has no `coordinates`
+  // of its own. MapLibre draws them anyway — it splits a collection into its parts —
+  // so skipping them here left thirteen rows that highlighted but never opened a
+  // popup or recentred the map.
+  function collectPoints(geom, pts) {
+    if (!geom) return pts;
+    if (Array.isArray(geom.geometries)) {
+      geom.geometries.forEach(function (g) { collectPoints(g, pts); });
+      return pts;
+    }
+    (function walk(c) {
       if (!Array.isArray(c)) return;
       if (typeof c[0] === "number") { pts.push(c); return; }
-      c.forEach(function (x) { walk(x, depth + 1); });
-    })(geom.coordinates, 0);
+      c.forEach(walk);
+    })(geom.coordinates);
+    return pts;
+  }
+
+  function centroid(geom) {
+    var pts = collectPoints(geom, []);
     if (!pts.length) return null;
     // Midpoint of the drawn shape reads better than an average for long corridors.
     return pts[Math.floor(pts.length / 2)];
