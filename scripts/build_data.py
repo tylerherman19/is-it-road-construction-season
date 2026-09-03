@@ -126,7 +126,28 @@ def merge_into(ev, geom):
     ev["distance_mi"] = round(d, 2)
     ev["ring"] = next((r for r in RINGS_MI if d <= r), None)
 
+def plain_road(road):
+    """Translate agency designations into what a person calls the road.
+
+    Nobody says "CSAH 073" out loud. Where the feed hides the local name in a
+    parenthetical ("CSAH 32 (117th Street)"), use that; otherwise decode the
+    prefix. US and Interstate numbers are already how people talk ("US 12",
+    "I-494"), so those pass through.
+    """
+    r = (road or "").strip()
+    m = re.match(r"^[A-Z]{1,12}\s*[0-9]+[A-Z]?\s*\(([^)]+)\)$", r)
+    if m: return m.group(1).strip()
+    m = re.match(r"^(?:CSAH|CR|CTY|RD|COUNTY ROAD|CO RD)\s*0*(\d+[A-Z]?)$", r, re.I)
+    if m: return "County Road " + m.group(1).upper()
+    m = re.match(r"^(?:MN|TH)\s*0*(\d+[A-Z]?)$", r, re.I)
+    if m: return "Highway " + m.group(1).upper()
+    # Compound names ("TH 25 and CR 113"): translate the codes in place.
+    r2 = re.sub(r"\b(?:CSAH|CR)\s*0*(\d+[A-Z]?)\b", lambda m: "County Road " + m.group(1).upper(), r, flags=re.I)
+    r2 = re.sub(r"\b(?:MN|TH)\s*0*(\d+[A-Z]?)\b", lambda m: "Highway " + m.group(1).upper(), r2, flags=re.I)
+    return r2
+
 def add_event(**kw):
+    if kw.get("road"): kw["road"] = plain_road(kw["road"])
     geom = kw.pop("geometry", None)
     if geom is None or geom.is_empty: return
     d = dist_mi(geom)
