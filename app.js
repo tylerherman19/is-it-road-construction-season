@@ -272,9 +272,7 @@
     $("stat-closed").textContent = c.closed;
     $("stat-constr").textContent = c.construction;
     $("stat-soon").textContent = c.starting_soon;
-    $("sub-closed").textContent = plural(c.closed, "road shut", "roads shut") + " within " + r + " miles";
-    $("sub-constr").textContent = plural(c.construction, "project", "projects") + " with work on the books";
-    $("sub-soon").textContent = "with a start date still ahead";
+    $("cms-head").textContent = "WITHIN " + r + " MI OF HOME";
 
     var badge = $("verdict-badge"), text = $("verdict-text");
     var total = c.closed + c.construction;
