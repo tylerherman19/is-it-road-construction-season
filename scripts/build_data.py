@@ -560,6 +560,34 @@ def run():
     c50 = counts["50"]
     answer = "YES" if (c50["closed"] + c50["construction"]) > 0 else "NO"
 
+    # ---- record book ----
+    # Longest-running still-active work, from each event's own start date. Day 1 is
+    # the start date (Central). "Active" matches the counts: active or full-season.
+    today_ct = NOW.astimezone(CT).date()
+    def days_running(e):
+        s = dt.datetime.fromisoformat(e["start"]).astimezone(CT).date()
+        return (today_ct - s).days + 1
+    # Skip records that can't carry a day count honestly: catch-all rows
+    # ("Various") and bare-year starts (a feed that only says "2023" lands on
+    # Jan 1 00:00 UTC, so "day 1343" would be false precision).
+    GENERIC_ROADS = {"various", "various locations", "multiple", "tbd", ""}
+    def recordable(e):
+        if e["road"].strip().lower() in GENERIC_ROADS: return False
+        s = dt.datetime.fromisoformat(e["start"])
+        return not (s.month == 1 and s.day == 1 and s.hour == 0 and s.minute == 0 and s.second == 0)
+    running = [e for e in events
+               if e["temporal"] in ("active", "season") and e.get("start") and recordable(e)]
+    running.sort(key=lambda e: e["start"])
+    board = [{"road": e["road"], "source": e["source"], "event_class": e["event_class"],
+              "days": days_running(e), "since": e["start"][:10], "distance_mi": e["distance_mi"]}
+             for e in running[:5]]
+    headline_e = next((e for e in running if e["event_class"] == "closed"), None)
+    if headline_e is None and running:
+        headline_e = running[0]
+    headline = ({"road": headline_e["road"], "event_class": headline_e["event_class"],
+                 "days": days_running(headline_e)} if headline_e else None)
+    records = {"as_of": today_ct.isoformat(), "headline": headline, "top": board}
+
     # Only closures and construction reach the page; restrictions (weight, height and
     # width limits) are not roadwork and nothing renders them.
     events = sorted((e for e in EVENTS if e["event_class"] in ("closed", "construction")),
@@ -570,6 +598,7 @@ def run():
         "rings_miles": RINGS_MI,
         "answer": answer,
         "counts": counts,
+        "records": records,
         "deduped": DEDUPED,
         "degraded": [s["name"] for s in SOURCES_STATUS if s.get("degraded")],
         "sources": SOURCES_STATUS,
