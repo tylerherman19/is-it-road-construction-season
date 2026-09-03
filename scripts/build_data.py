@@ -583,9 +583,16 @@ def run():
                if e["temporal"] in ("active", "season") and e.get("start") and recordable(e)]
     running.sort(key=lambda e: e["start"])
     # Full recordable list, oldest first - the page filters by the selected ring.
-    board = [{"road": e["road"], "source": e["source"], "event_class": e["event_class"],
-              "days": days_running(e), "since": e["start"][:10], "distance_mi": e["distance_mi"]}
-             for e in running]
+    # One row per real-world job: agencies split a closure into segments, so two
+    # records with the same road, class and start date are the same job.
+    seen = set()
+    board = []
+    for e in running:
+        key = (e["road"].strip().lower(), e["event_class"], e["start"][:10])
+        if key in seen: continue
+        seen.add(key)
+        board.append({"road": e["road"], "source": e["source"], "event_class": e["event_class"],
+                      "days": days_running(e), "since": e["start"][:10], "distance_mi": e["distance_mi"]})
     records = {"as_of": today_ct.isoformat(), "all": board}
 
     out = {
