@@ -135,13 +135,17 @@ def cars_geometry(details):
 
 def load_511():
     try:
-        data = get("https://mn.carsprogram.org/carsapi_v1/api/events")
+        data = get("https://mn.carsprogram.org/carsapi_v1/api/events", timeout=150, retries=2)
         src, via = data, "cars_rest"
-    except Exception as ex:
-        # Fallback: WZDx (CC0)
-        data = get("https://mn.carsprogram.org/carsapi_v1/api/wzdx")
-        src, via = data, "wzdx"
-        return load_wzdx(src)
+    except Exception:
+        try:
+            # Fallback 1: WZDx (CC0)
+            data = get("https://mn.carsprogram.org/carsapi_v1/api/wzdx", timeout=90, retries=1)
+            return load_wzdx(data)
+        except Exception:
+            # Fallback 2: Iowa DOT ArcGIS mirror of the same CARS database
+            # (point geometry, 10-minute cycle - memo section 1d / fallback ladder)
+            return load_mirror()
     n_in = n_out = 0
     seen = {}
     for e in src:
@@ -213,6 +217,67 @@ def load_wzdx(data):
                   url="https://511mn.org", geometry=geom)
         if len(EVENTS) > before: n += 1
     SOURCES_STATUS.append({"name": "MnDOT 511 (WZDx fallback)", "ok": True, "records": n, "via": "wzdx"})
+    return True
+
+MIRROR_URL = "https://services.arcgis.com/8lRhdTsQyJpO52F1/arcgis/rest/services/CARS511_MN_Events_View/FeatureServer/0"
+MIRROR_CLOSED = ("closed", "road closed", "bridge closed", "intersection closed",
+                 "exit ramp closed", "entrance ramp closed")
+MIRROR_CONSTR = ("construction", "maintenance", "roadwork", "paving", "utility work",
+                 "lane closed", "reduced to one lane", "reduced to two lanes",
+                 "shoulder closed", "intermittent")
+
+def mirror_class(phrase):
+    ph = (phrase or "").lower()
+    if any(k in ph for k in ("weight limit", "height limit", "width limit", "length limit",
+                             "roundabout", "oversize")):
+        return "restriction"
+    if any(k in ph for k in MIRROR_CLOSED): return "closed"
+    if any(k in ph for k in MIRROR_CONSTR): return "construction"
+    return None
+
+def mirror_date(dstr, tstr, end_of_day=False):
+    if not dstr: return None
+    try:
+        base = dt.datetime.strptime(str(dstr), "%Y%m%d").replace(tzinfo=dt.timezone.utc)
+    except ValueError:
+        return None
+    if tstr:
+        try:
+            t = dt.datetime.strptime(str(tstr).strip(), "%I:%M %p")
+            # feed times are America/Chicago (UTC-5 in Sept, -6 in winter; approximate with -5/-6 by dst)
+            return base.replace(hour=t.hour, minute=t.minute) + dt.timedelta(hours=5)
+        except ValueError:
+            pass
+    return base + dt.timedelta(days=1 if end_of_day else 0)
+
+def load_mirror():
+    feats = arcgis_query(MIRROR_URL, buffer_m=BUF50)
+    n = 0
+    seen = set()
+    for f in feats:
+        p = props(f)
+        phrase = p.get("phrase") or ""
+        cls = mirror_class(phrase)
+        if cls is None: continue
+        key = (p.get("ID"), phrase)
+        if key in seen: continue
+        seen.add(key)
+        start = mirror_date(p.get("IssueDate"), p.get("StartTime"))
+        end = mirror_date(p.get("ExpireDate"), p.get("EndTime"), end_of_day=True)
+        tmp = "upcoming" if p.get("STYLE") == "future_event" else temporal(start, end, undated="active")
+        geom = feat_geom(f)
+        if geom is None: continue
+        before = len(EVENTS)
+        add_event(id=f"mirror:{p.get('ID')}", source="MnDOT 511 (Iowa DOT mirror)",
+                  event_class=cls, temporal=tmp,
+                  road=str(p.get("Route") or "State highway"),
+                  description=str(p.get("headline") or ""),
+                  start=start.isoformat() if start else None,
+                  end=end.isoformat() if end else None,
+                  url=p.get("linktxt") if str(p.get("linktxt") or "").startswith("http") else None,
+                  geometry=geom)
+        if len(EVENTS) > before: n += 1
+    SOURCES_STATUS.append({"name": "MnDOT 511 (Iowa DOT mirror)", "ok": True, "records": n, "via": "iowa_mirror"})
     return True
 
 # ---------------- ArcGIS helpers ----------------
