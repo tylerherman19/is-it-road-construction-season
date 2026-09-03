@@ -17,7 +17,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Inter:wght@400;500;600;700&family=Saira+Stencil+One&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Inter:wght@400;500;600;700&family=Saira+Stencil+One&family=Doto:wght@500;700&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -66,27 +66,20 @@
       <div class="segmented" role="radiogroup" aria-labelledby="radius-label" id="radius-group"></div>
     </div>
 
-    <div class="stats" id="stats">
-      <div class="stat" data-cls="closed">
-        <span class="stat-key"><span class="dot" aria-hidden="true"></span>Closed now</span>
-        <span class="stat-num" id="stat-closed">&ndash;</span>
-        <span class="stat-sub" id="sub-closed">roads shut to traffic</span>
+    <div class="cms" id="stats">
+      <div class="cms-frame">
+        <div class="cms-screen">
+          <div class="cms-line cms-head"><span id="cms-head">READING THE FEEDS</span></div>
+          <div class="cms-line"><span class="cms-label">CLOSED NOW</span><span class="cms-num" id="stat-closed">&ndash;</span></div>
+          <div class="cms-line"><span class="cms-label">UNDER CONSTRUCTION</span><span class="cms-num" id="stat-constr">&ndash;</span></div>
+          <div class="cms-line"><span class="cms-label">STARTING SOON</span><span class="cms-num" id="stat-soon">&ndash;</span></div>
+        </div>
       </div>
-      <div class="stat" data-cls="constr">
-        <span class="stat-key"><span class="dot" aria-hidden="true"></span>Under construction</span>
-        <span class="stat-num" id="stat-constr">&ndash;</span>
-        <span class="stat-sub" id="sub-constr">projects with work underway</span>
+      <div class="cms-trailer" aria-hidden="true">
+        <span class="cms-post"></span>
+        <span class="cms-tongue"></span>
       </div>
-      <div class="stat" data-cls="soon">
-        <span class="stat-key"><span class="dot" aria-hidden="true"></span>Starting soon</span>
-        <span class="stat-num" id="stat-soon">&ndash;</span>
-        <span class="stat-sub" id="sub-soon">with a published start date</span>
-      </div>
-      <div class="stat stat-quiet">
-        <span class="stat-key">Feeds reporting</span>
-        <span class="stat-num" id="stat-feeds">&ndash;</span>
-        <span class="stat-sub" id="stat-updated">checking&hellip;</span>
-      </div>
+      <p class="cms-meta"><span id="stat-feeds">&ndash;</span> feeds reporting &middot; <span id="stat-updated">checking&hellip;</span></p>
     </div>
   </div>
 </section>
