@@ -242,15 +242,12 @@ a { color: inherit; }
   width: 62px; height: 62px;
   display: inline-grid; place-items: center;
   margin: 4px 8px 4px 2px;
-  padding: 0; border: 0; border-radius: 0; background: transparent;
-  transform: rotate(45deg);
-}
-.verdict-badge::before {
-  content: ""; position: absolute; inset: 0;
+  padding: 0;
   background: var(--surface-3);
   border: 3px solid var(--line-strong);
   border-radius: 9px;
   box-shadow: var(--shadow-sm);
+  transform: rotate(45deg);
 }
 /* the reflective sheen you catch in the headlights */
 .verdict-badge::after {
@@ -259,6 +256,7 @@ a { color: inherit; }
   pointer-events: none;
 }
 .verdict-badge span {
+  position: relative; z-index: 1;
   display: inline-block;
   transform: rotate(-45deg);
   font-family: var(--sign);
@@ -267,11 +265,11 @@ a { color: inherit; }
   color: var(--text-2);
 }
 .verdict-badge[data-state="loading"] span { font-size: 9.5px; }
-.verdict-badge[data-state="yes"]::before { background: var(--constr); border-color: var(--tape-ink); }
-.verdict-badge[data-state="yes"] span { color: var(--tape-ink); }
-.verdict-badge[data-state="no"]::before  { background: var(--surface-3); border-color: var(--text-3); }
-.verdict-badge[data-state="error"]::before { background: var(--closed); border-color: var(--tape-ink); }
-.verdict-badge[data-state="error"] span { color: #fff; }
+.verdict-badge[data-state="yes"] { background: var(--constr); border-color: var(--tape-ink); }
+.verdict-badge[data-state="yes"], .verdict-badge[data-state="yes"] span { color: var(--tape-ink); }
+.verdict-badge[data-state="no"] { background: var(--surface-3); border-color: var(--text-3); }
+.verdict-badge[data-state="error"] { background: var(--closed); border-color: var(--tape-ink); }
+.verdict-badge[data-state="error"], .verdict-badge[data-state="error"] span { color: #fff; }
 .verdict-text { font-size: clamp(17px, 2.1vw, 20px); color: var(--text-2); line-height: 1.45; }
 
 /* radius selector */
