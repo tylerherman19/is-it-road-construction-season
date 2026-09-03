@@ -560,6 +560,10 @@ def run():
     c50 = counts["50"]
     answer = "YES" if (c50["closed"] + c50["construction"]) > 0 else "NO"
 
+    # Only closures and construction reach the page; restrictions (weight, height and
+    # width limits) are not roadwork and nothing renders them.
+    events = sorted((e for e in EVENTS if e["event_class"] in ("closed", "construction")),
+                    key=lambda e: e["distance_mi"])
     # ---- record book ----
     # Longest-running still-active work, from each event's own start date. Day 1 is
     # the start date (Central). "Active" matches the counts: active or full-season.
@@ -588,10 +592,6 @@ def run():
                  "days": days_running(headline_e)} if headline_e else None)
     records = {"as_of": today_ct.isoformat(), "headline": headline, "top": board}
 
-    # Only closures and construction reach the page; restrictions (weight, height and
-    # width limits) are not roadwork and nothing renders them.
-    events = sorted((e for e in EVENTS if e["event_class"] in ("closed", "construction")),
-                    key=lambda e: e["distance_mi"])
     out = {
         "generated_at": NOW.isoformat(),
         "origin": {"lon": ORIGIN[0], "lat": ORIGIN[1], "label": "Home, Plymouth MN"},
