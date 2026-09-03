@@ -258,6 +258,7 @@
 
     renderStats();
     renderChipCounts();
+    renderRecords();
     renderList();
     renderTally();
     syncMap();
@@ -371,6 +372,35 @@
         '<td class="num" data-label="Under construction">' + c.construction + "</td>" +
         '<td class="num" data-label="Starting soon">' + (c.starting_soon || 0) + "</td>" +
         "</tr>";
+    }).join("");
+  }
+
+  function renderRecords() {
+    var section = $("records-section");
+    var rec = state.data && state.data.records;
+    if (!rec || !rec.headline || !rec.top || !rec.top.length) {
+      section.hidden = true;
+      return;
+    }
+    section.hidden = false;
+    var h = rec.headline;
+    $("record-sign-label").textContent =
+      h.event_class === "closed" ? "LONGEST ACTIVE CLOSURE" : "LONGEST ACTIVE PROJECT";
+    $("record-road").textContent = h.road;
+    $("record-days").textContent = h.days;
+    var fmtMi = function (m) { return m < 1 ? Math.round(m * 10) / 10 : Math.round(m); };
+    $("record-board").innerHTML = rec.top.map(function (r, i) {
+      return '<li class="record-row">' +
+        '<span class="record-rank">' + (i + 1) + "</span>" +
+        '<span class="record-cls" data-cls="' + r.event_class + '"></span>' +
+        '<div class="record-main">' +
+          '<div class="record-name">' + esc(r.road) + "</div>" +
+          '<div class="record-meta">' + esc(r.source) + " &middot; " + fmtMi(r.distance_mi) +
+            " mi away &middot; since " + esc(r.since) + "</div>" +
+        "</div>" +
+        '<div class="record-days-cell"><b>' + r.days + "</b><span>" +
+          (r.days === 1 ? "DAY" : "DAYS") + "</span></div>" +
+        "</li>";
     }).join("");
   }
 
