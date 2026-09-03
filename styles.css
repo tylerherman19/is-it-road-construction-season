@@ -439,6 +439,8 @@ a { color: inherit; }
 .results-more, .results-empty { margin: 0; padding: 16px; font-size: 13px; color: var(--text-3); text-align: center; }
 
 /* ---------------- popup ---------------- */
+/* keep the popup inside narrow viewports (390px phones) */
+.maplibregl-popup { max-width: min(320px, 84vw) !important; }
 .maplibregl-popup-content {
   font-family: var(--ui);
   max-height: 340px;
