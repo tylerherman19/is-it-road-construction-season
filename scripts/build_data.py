@@ -7,6 +7,9 @@ the origin, and writes data.json. Fail-soft per source.
 Sources and field maps: see BUILD_MEMO.md (research memo, 3 Sep 2026).
 """
 import json, math, os, re, sys, time, datetime as dt
+from zoneinfo import ZoneInfo
+
+CT = ZoneInfo("America/Chicago")
 import requests
 from shapely.geometry import shape, Point, LineString, MultiLineString, mapping
 from shapely.ops import transform as shp_transform
@@ -287,8 +290,9 @@ def mirror_date(dstr, tstr, end_of_day=False):
     if tstr:
         try:
             t = dt.datetime.strptime(str(tstr).strip(), "%I:%M %p")
-            # feed times are America/Chicago (UTC-5 in Sept, -6 in winter; approximate with -5/-6 by dst)
-            return base.replace(hour=t.hour, minute=t.minute) + dt.timedelta(hours=5)
+            # feed times are America/Chicago wall clock - attach the real zone (DST-correct)
+            naive = base.replace(hour=t.hour, minute=t.minute, tzinfo=None)
+            return naive.replace(tzinfo=CT)
         except ValueError:
             pass
     return base + dt.timedelta(days=1 if end_of_day else 0)
