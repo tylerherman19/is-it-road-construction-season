@@ -582,15 +582,11 @@ def run():
     running = [e for e in events
                if e["temporal"] in ("active", "season") and e.get("start") and recordable(e)]
     running.sort(key=lambda e: e["start"])
+    # Full recordable list, oldest first - the page filters by the selected ring.
     board = [{"road": e["road"], "source": e["source"], "event_class": e["event_class"],
               "days": days_running(e), "since": e["start"][:10], "distance_mi": e["distance_mi"]}
-             for e in running[:5]]
-    headline_e = next((e for e in running if e["event_class"] == "closed"), None)
-    if headline_e is None and running:
-        headline_e = running[0]
-    headline = ({"road": headline_e["road"], "event_class": headline_e["event_class"],
-                 "days": days_running(headline_e)} if headline_e else None)
-    records = {"as_of": today_ct.isoformat(), "headline": headline, "top": board}
+             for e in running]
+    records = {"as_of": today_ct.isoformat(), "all": board}
 
     out = {
         "generated_at": NOW.isoformat(),
