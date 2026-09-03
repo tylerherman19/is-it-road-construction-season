@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Is It Road Construction Season?</title>
+<meta name="description" content="A daily reckoning for the northwest metro. Live closure and construction counts within 5, 10, 20 and 50 miles of Plymouth, Minnesota.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="stale-banner mono" id="stale-banner" hidden></div>
+
+<header class="masthead">
+  <p class="kicker mono">The Northwest Metro Desk &middot; Public Works Intelligence</p>
+  <h1 class="nameplate">Is It Road Construction Season?</h1>
+  <p class="dateline mono">Plymouth, Minnesota &mdash; <span id="dateline-date">&nbsp;</span> &mdash; Live Edition</p>
+  <div class="hazard" role="presentation"></div>
+</header>
+
+<main>
+
+<section class="verdict" aria-live="polite">
+  <p class="kicker mono">The Answer</p>
+  <p class="answer" id="answer">&mdash;</p>
+  <p class="lede" id="lede">Consulting the orange barrels&hellip;</p>
+  <p class="stamp mono" id="stamp">&nbsp;</p>
+</section>
+
+<section class="tally">
+  <h2>The Tally</h2>
+  <table class="figures">
+    <thead>
+      <tr>
+        <th scope="col">Radius from the house</th>
+        <th scope="col" class="num">Closed now</th>
+        <th scope="col" class="num">Under construction</th>
+        <th scope="col" class="num">Starting soon</th>
+      </tr>
+    </thead>
+    <tbody id="tally-body">
+      <tr><td colspan="4" class="loading mono">Counting barrels&hellip;</td></tr>
+    </tbody>
+  </table>
+  <p class="footnote">Counts are cumulative &mdash; a closure at four miles appears in every ring. Distances are
+  straight-line, measured to the nearest point of the affected road, not to its most convenient endpoint.
+  &ldquo;The house&rdquo; is a particular driveway in Plymouth, MN 55446.</p>
+</section>
+
+<section class="map-section">
+  <h2>The Scene of the Crime</h2>
+  <div class="map-frame">
+    <div id="map"></div>
+  </div>
+  <div class="legend mono" id="legend">
+    <span class="swatch sw-closed"></span>Closed now
+    <span class="swatch sw-constr"></span>Under construction
+    <span class="swatch sw-season"></span>On the books this season
+    <span class="swatch sw-soon"></span>Starting soon
+    <span class="swatch sw-home">&#8962;</span>Home
+    <span class="swatch sw-ring"></span>Rings at 5 / 10 / 20 / 50 miles
+  </div>
+  <p class="footnote">Tap any colored road for the particulars: what, where, and until when.</p>
+</section>
+
+<section class="fineprint">
+  <div class="col">
+    <h3>What we know</h3>
+    <p>Every figure on this page comes out of a live government feed, refreshed by an unpaid robot every
+    fifteen minutes: MnDOT&rsquo;s 511 system for every interstate, U.S. route and state highway;
+    MnDOT State Aid for county and municipal arterials; and the published project maps of Anoka, Carver,
+    Dakota and Hennepin counties and the cities of St.&nbsp;Paul, Minneapolis, Minnetonka and Golden Valley.
+    State-highway closures are minute-fresh. Everything else is as fresh as the agency felt like making it.</p>
+  </div>
+  <div class="col">
+    <h3>What we don&rsquo;t know</h3>
+    <p>City streets are a lawless frontier we know nothing about. Plymouth publishes no machine-readable
+    closure data. Neither do Maple Grove, Medina, Wayzata, New Hope, Robbinsdale, St.&nbsp;Louis Park,
+    Brooklyn Park or Edina. Edina reports its closures to Waze and considers the matter settled. If the
+    street in front of your house is torn up and absent from this map, that is not an error. That is the
+    frontier.</p>
+  </div>
+  <div class="col">
+    <h3>The small print</h3>
+    <p>&ldquo;Closed&rdquo; means an agency says the road, ramp or bridge is shut right now. &ldquo;Under
+    construction&rdquo; means work is active, or is on the books for the season &mdash; county and city
+    layers promise a project, not a blocked lane this morning. &ldquo;Starting soon&rdquo; is work with a
+    published start date in the future. Data is republished with attribution to each agency, for general
+    reference only, and not for legal, engineering or surveying use. Not affiliated with MnDOT, which has
+    enough problems.</p>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="hazard" role="presentation"></div>
+  <p class="mono">Published from a particular driveway in Plymouth, MN 55446 &middot; <span id="footer-sources">&nbsp;</span> &middot; Data &copy; the agencies named above &middot; Map &copy; OpenStreetMap contributors &amp; OpenFreeMap</p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
