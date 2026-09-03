@@ -25,7 +25,7 @@
 
   var state = {
     data: null,
-    radius: 20,
+    radius: 10,
     enabled: new Set(ORDER),
     query: "",
     visible: [],       // events passing the current filters, nearest first
