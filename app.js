@@ -678,10 +678,32 @@
 
     if (state.mapReady) {
       state.popup.setLngLat(at).setHTML(popupHtml(e)).addTo(state.map);
+      keepPopupInView(state.popup);
       if (fromList) {
         state.map.easeTo({ center: at, zoom: Math.max(state.map.getZoom(), 11), duration: 600 });
+        window.setTimeout(function () { keepPopupInView(state.popup); }, 700);
       }
     }
+  }
+
+  // MapLibre anchors the popup on the tapped point; near a screen edge half the
+  // card lands outside the viewport (the mobile screenshot bug). Pan the map just
+  // enough to bring the whole card back inside.
+  function keepPopupInView(popup) {
+    window.requestAnimationFrame(function () {
+      if (!state.map) return;
+      var el = popup.getElement && popup.getElement();
+      if (!el) return;
+      var r = el.getBoundingClientRect();
+      var m = state.map.getContainer().getBoundingClientRect();
+      var pad = 10;
+      var shiftX = 0, shiftY = 0;
+      if (r.left < m.left + pad) shiftX = (m.left + pad) - r.left;
+      else if (r.right > m.right - pad) shiftX = (m.right - pad) - r.right;
+      if (r.top < m.top + pad) shiftY = (m.top + pad) - r.top;
+      else if (r.bottom > m.bottom - pad) shiftY = (m.bottom - pad) - r.bottom;
+      if (shiftX || shiftY) state.map.panBy([shiftX, shiftY], { duration: 200 });
+    });
   }
 
   function centroid(geom) {
