@@ -126,7 +126,7 @@
     .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
     .then(boot)
     .catch(function (err) {
-      $("verdict-badge").textContent = "Unknown";
+      $("verdict-badge").innerHTML = "<span>Unknown</span>";
       $("verdict-badge").dataset.state = "error";
       $("verdict-text").textContent =
         "The data feed did not answer, so this page has nothing to report. Like the city of Plymouth, it publishes nothing a machine can read.";
@@ -279,11 +279,11 @@
     var badge = $("verdict-badge"), text = $("verdict-text");
     var total = c.closed + c.construction;
     if (total === 0) {
-      badge.textContent = "No";
+      badge.innerHTML = "<span>No</span>";
       badge.dataset.state = "no";
       text.textContent = "Nothing on the books within " + r + " miles of the house. Enjoy it. It will not last.";
     } else {
-      badge.textContent = "Yes";
+      badge.innerHTML = "<span>Yes</span>";
       badge.dataset.state = "yes";
       if (c.closed > 0) {
         text.textContent = c.closed + " " + plural(c.closed, "road is", "roads are") + " closed and " +
