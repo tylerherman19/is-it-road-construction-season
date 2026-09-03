@@ -2,19 +2,28 @@ name: Update road data
 
 on:
   schedule:
+    # GitHub runs scheduled workflows on a best-effort queue, so a */15 cron is a
+    # ceiling rather than a promise; the site reports the real age of the data.
     - cron: "*/15 * * * *"
   workflow_dispatch:
 
 permissions:
   contents: write
 
+# Let a run finish before the next one starts. Overlapping runs race on the push
+# and the loser rewrites data.json with an older snapshot.
+concurrency:
+  group: update-data
+  cancel-in-progress: false
+
 jobs:
   update:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
@@ -31,7 +40,13 @@ jobs:
           git add data.json
           if git diff --cached --quiet; then
             echo "No change."
-          else
-            git commit -m "data: $(date -u +'%Y-%m-%d %H:%M UTC')"
-            git push
+            exit 0
           fi
+          git commit -m "data: $(date -u +'%Y-%m-%d %H:%M UTC')"
+          for i in 1 2 3; do
+            if git push; then exit 0; fi
+            echo "Push rejected, rebasing on origin/main (attempt $i)."
+            git pull --rebase origin main
+          done
+          echo "Could not push after 3 attempts." >&2
+          exit 1

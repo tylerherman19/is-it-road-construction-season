@@ -4,102 +4,210 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Is It Road Construction Season?</title>
-<meta name="description" content="A daily reckoning for the northwest metro. Live closure and construction counts within 5, 10, 20 and 50 miles of Plymouth, Minnesota.">
+<meta name="description" content="A live count of road closures and construction projects within 5, 10, 20 and 50 miles of Plymouth, Minnesota. Built from MnDOT, county and city feeds.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16161a" media="(prefers-color-scheme: dark)">
+
+<meta property="og:title" content="Is It Road Construction Season?">
+<meta property="og:description" content="A live count of road closures and construction projects around Plymouth, Minnesota.">
+<meta property="og:type" content="website">
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23dc7f00'/%3E%3Cpath d='M8 22 16 8l8 14z' fill='%23fff'/%3E%3C/svg%3E">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-<div class="stale-banner mono" id="stale-banner" hidden></div>
+<a class="skip-link" href="#map-section">Skip to the map</a>
 
-<header class="masthead">
-  <p class="kicker mono">The Northwest Metro Desk &middot; Public Works Intelligence</p>
-  <h1 class="nameplate">Is It Road Construction Season?</h1>
-  <p class="dateline mono">Plymouth, Minnesota &mdash; <span id="dateline-date">&nbsp;</span> &mdash; Live Edition</p>
-  <div class="hazard" role="presentation"></div>
+<div class="notice" id="notice" hidden></div>
+
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="brand" href="#top">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-name">Road Construction Season</span>
+    </a>
+    <div class="topbar-meta">
+      <span class="pulse" id="pulse" data-state="loading">
+        <span class="pulse-dot" aria-hidden="true"></span>
+        <span id="pulse-text">Loading</span>
+      </span>
+      <button type="button" class="icon-btn" id="theme-toggle" aria-label="Switch between light and dark theme">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+          <path class="icon-sun" d="M12 4V2m0 20v-2m8-8h2M2 12h2m13.66-5.66 1.41-1.41M4.93 19.07l1.41-1.41m0-11.32L4.93 4.93m14.14 14.14-1.41-1.41M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+          <path class="icon-moon" d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+  </div>
 </header>
 
-<main>
+<main id="top">
 
-<section class="verdict" aria-live="polite">
-  <p class="kicker mono">The Answer</p>
-  <p class="answer" id="answer">&mdash;</p>
-  <p class="lede" id="lede">Consulting the orange barrels&hellip;</p>
-  <p class="stamp mono" id="stamp">&nbsp;</p>
+<!-- ---------------- status ---------------- -->
+<section class="hero" aria-labelledby="hero-title">
+  <div class="wrap">
+    <p class="eyebrow">Plymouth, Minnesota &middot; <span id="dateline">&nbsp;</span></p>
+    <h1 id="hero-title">Is it road construction season?</h1>
+
+    <p class="verdict" id="verdict">
+      <span class="verdict-badge" id="verdict-badge" data-state="loading">Checking</span>
+      <span class="verdict-text" id="verdict-text">Reading the orange barrels&hellip;</span>
+    </p>
+
+    <div class="radius-control">
+      <span class="radius-label" id="radius-label">Distance from home</span>
+      <div class="segmented" role="radiogroup" aria-labelledby="radius-label" id="radius-group"></div>
+    </div>
+
+    <div class="stats" id="stats">
+      <div class="stat" data-cls="closed">
+        <span class="stat-key"><span class="dot" aria-hidden="true"></span>Closed now</span>
+        <span class="stat-num" id="stat-closed">&ndash;</span>
+        <span class="stat-sub" id="sub-closed">roads shut to traffic</span>
+      </div>
+      <div class="stat" data-cls="constr">
+        <span class="stat-key"><span class="dot" aria-hidden="true"></span>Under construction</span>
+        <span class="stat-num" id="stat-constr">&ndash;</span>
+        <span class="stat-sub" id="sub-constr">projects with work underway</span>
+      </div>
+      <div class="stat" data-cls="soon">
+        <span class="stat-key"><span class="dot" aria-hidden="true"></span>Starting soon</span>
+        <span class="stat-num" id="stat-soon">&ndash;</span>
+        <span class="stat-sub" id="sub-soon">with a published start date</span>
+      </div>
+      <div class="stat stat-quiet">
+        <span class="stat-key">Feeds reporting</span>
+        <span class="stat-num" id="stat-feeds">&ndash;</span>
+        <span class="stat-sub" id="stat-updated">checking&hellip;</span>
+      </div>
+    </div>
+  </div>
 </section>
 
-<section class="tally">
-  <h2>The Tally</h2>
-  <table class="figures">
-    <thead>
-      <tr>
-        <th scope="col">Radius from the house</th>
-        <th scope="col" class="num">Closed now</th>
-        <th scope="col" class="num">Under construction</th>
-        <th scope="col" class="num">Starting soon</th>
-      </tr>
-    </thead>
-    <tbody id="tally-body">
-      <tr><td colspan="4" class="loading mono">Counting barrels&hellip;</td></tr>
-    </tbody>
-  </table>
-  <p class="footnote">Counts are cumulative &mdash; a closure at four miles appears in every ring. Distances are
-  straight-line, measured to the nearest point of the affected road, not to its most convenient endpoint.
-  &ldquo;The house&rdquo; is a particular driveway in Plymouth, MN 55446.</p>
+<!-- ---------------- map ---------------- -->
+<section class="map-section" id="map-section" aria-labelledby="map-title">
+  <div class="wrap">
+    <div class="section-head">
+      <h2 id="map-title">What&rsquo;s torn up out there</h2>
+      <p class="section-sub" id="map-sub">Every project the agencies will admit to, mapped.</p>
+    </div>
+
+    <div class="toolbar">
+      <div class="chips" role="group" aria-label="Filter by status" id="chips"></div>
+      <div class="search">
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false">
+          <circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
+          <path d="m16 16 4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+        <input type="search" id="search" placeholder="Search a road or project" aria-label="Search projects by road or description" autocomplete="off">
+      </div>
+    </div>
+
+    <div class="map-layout" id="map-layout">
+      <div class="map-shell">
+        <div id="map" role="application" aria-label="Map of road closures and construction projects near Plymouth, Minnesota"></div>
+        <div class="legend" id="legend" aria-hidden="true"></div>
+      </div>
+
+      <aside class="panel" aria-labelledby="panel-title">
+        <button type="button" class="panel-grip" id="panel-grip" aria-expanded="false" aria-controls="panel-body">
+          <span class="grip-bar" aria-hidden="true"></span>
+          <span class="grip-text"><span id="panel-count">&ndash;</span> nearby</span>
+        </button>
+        <div class="panel-head">
+          <h3 id="panel-title">Closest first</h3>
+          <p class="panel-sub" id="panel-sub">&nbsp;</p>
+        </div>
+        <div class="panel-body" id="panel-body">
+          <ul class="results" id="results" aria-live="polite"></ul>
+          <p class="results-more" id="results-more" hidden></p>
+        </div>
+      </aside>
+    </div>
+
+    <p class="note">Distances are straight-line, measured to the nearest point of the affected road. Counts are
+    cumulative &mdash; a closure four miles out appears in every ring beyond it.</p>
+  </div>
 </section>
 
-<section class="map-section">
-  <h2>The Scene of the Crime</h2>
-  <div class="map-frame">
-    <div id="map"></div>
+<!-- ---------------- by radius ---------------- -->
+<section class="tally-section" aria-labelledby="tally-title">
+  <div class="wrap">
+    <div class="section-head">
+      <h2 id="tally-title">The full tally</h2>
+      <p class="section-sub">Every ring, for the completists.</p>
+    </div>
+    <div class="table-scroll">
+      <table class="tally">
+        <thead>
+          <tr>
+            <th scope="col">Radius</th>
+            <th scope="col" class="num">Closed now</th>
+            <th scope="col" class="num">Under construction</th>
+            <th scope="col" class="num">Starting soon</th>
+          </tr>
+        </thead>
+        <tbody id="tally-body">
+          <tr><td colspan="4" class="loading">Counting barrels&hellip;</td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
-  <div class="legend mono" id="legend">
-    <span class="swatch sw-closed"></span>Closed now
-    <span class="swatch sw-constr"></span>Under construction
-    <span class="swatch sw-season"></span>On the books this season
-    <span class="swatch sw-soon"></span>Starting soon
-    <span class="swatch sw-home">&#8962;</span>Home
-    <span class="swatch sw-ring"></span>Rings at 5 / 10 / 20 / 50 miles
-  </div>
-  <p class="footnote">Tap any colored road for the particulars: what, where, and until when.</p>
 </section>
 
-<section class="fineprint">
-  <div class="col">
-    <h3>What we know</h3>
-    <p>Every figure on this page comes out of a live government feed, refreshed by an unpaid robot every
-    fifteen minutes: MnDOT&rsquo;s 511 system for every interstate, U.S. route and state highway;
-    MnDOT State Aid for county and municipal arterials; and the published project maps of Anoka, Carver,
-    Dakota and Hennepin counties and the cities of St.&nbsp;Paul, Minneapolis, Minnetonka and Golden Valley.
-    State-highway closures are minute-fresh. Everything else is as fresh as the agency felt like making it.</p>
-  </div>
-  <div class="col">
-    <h3>What we don&rsquo;t know</h3>
-    <p>City streets are a lawless frontier we know nothing about. Plymouth publishes no machine-readable
-    closure data. Neither do Maple Grove, Medina, Wayzata, New Hope, Robbinsdale, St.&nbsp;Louis Park,
-    Brooklyn Park or Edina. Edina reports its closures to Waze and considers the matter settled. If the
-    street in front of your house is torn up and absent from this map, that is not an error. That is the
-    frontier.</p>
-  </div>
-  <div class="col">
-    <h3>The small print</h3>
-    <p>&ldquo;Closed&rdquo; means an agency says the road, ramp or bridge is shut right now. &ldquo;Under
-    construction&rdquo; means work is active, or is on the books for the season &mdash; county and city
-    layers promise a project, not a blocked lane this morning. &ldquo;Starting soon&rdquo; is work with a
-    published start date in the future. Data is republished with attribution to each agency, for general
-    reference only, and not for legal, engineering or surveying use. Not affiliated with MnDOT, which has
-    enough problems.</p>
+<!-- ---------------- fine print ---------------- -->
+<section class="fineprint" aria-labelledby="fineprint-title">
+  <div class="wrap">
+    <div class="section-head">
+      <h2 id="fineprint-title">Where this comes from</h2>
+    </div>
+    <div class="cols">
+      <div class="col">
+        <h3>What we know</h3>
+        <p>Every figure here comes out of a live government feed, rebuilt by an unpaid robot several times an
+        hour: MnDOT&rsquo;s 511 system for every interstate, U.S. route and state highway; MnDOT State Aid for
+        county and municipal arterials; and the published project maps of Anoka, Carver, Dakota and Hennepin
+        counties and the cities of St.&nbsp;Paul, Minneapolis, Minnetonka and Golden Valley. State-highway
+        closures are minute-fresh. Everything else is as fresh as the agency felt like making it.</p>
+      </div>
+      <div class="col">
+        <h3>What we don&rsquo;t</h3>
+        <p>City streets are a lawless frontier. Plymouth publishes no machine-readable closure data. Neither do
+        Maple Grove, Medina, Wayzata, New Hope, Robbinsdale, St.&nbsp;Louis Park, Brooklyn Park or Edina. Edina
+        reports its closures to Waze and considers the matter settled. If the street in front of your house is
+        torn up and absent from this map, that is not an error. That is the frontier.</p>
+      </div>
+      <div class="col">
+        <h3>The small print</h3>
+        <p><strong>Closed</strong> means an agency says the road, ramp or bridge is shut. <strong>Under
+        construction</strong> means work is active, or on the books for the season &mdash; county and city
+        layers promise a project, not a blocked lane this morning. <strong>Starting soon</strong> has a
+        published start date in the future. Republished with attribution to each agency, for general reference
+        only, and not for legal, engineering or surveying use. Not affiliated with MnDOT, which has enough
+        problems.</p>
+      </div>
+    </div>
+    <details class="sources">
+      <summary>Feed status, one line each</summary>
+      <ul class="source-list" id="source-list"></ul>
+    </details>
   </div>
 </section>
 
 </main>
 
 <footer>
-  <div class="hazard" role="presentation"></div>
-  <p class="mono">Published from a particular driveway in Plymouth, MN 55446 &middot; <span id="footer-sources">&nbsp;</span> &middot; Data &copy; the agencies named above &middot; Map &copy; OpenStreetMap contributors &amp; OpenFreeMap</p>
+  <div class="wrap footer-inner">
+    <p>Published from a particular driveway in Plymouth, MN 55446.</p>
+    <p>Data &copy; the agencies named above &middot; Map &copy; OpenStreetMap contributors &amp; OpenFreeMap</p>
+  </div>
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
