@@ -75,13 +75,18 @@
     return date + ", " + time + " CT";
   }
 
-  // Project dates are calendar dates the agencies store at UTC midnight, not real
-  // instants. Rendering them in Central time moves every one of them back a day,
-  // which is how a project starting 1 Jan 2025 came out as "Dec 31, 2024".
+  // Two kinds of values arrive here. Date-only agency fields are stored at exactly
+  // UTC midnight - they mean the calendar day, so show the stored date (rendering
+  // those in Central shifts every one back a day). Real instants (511 feed times,
+  // refresh stamps) render in Central, like every other timestamp on the page.
   function fmtDay(iso) {
     var d = new Date(iso);
     if (isNaN(d)) return null;
-    return d.toLocaleDateString("en-US", { timeZone: "UTC", month: "short", day: "numeric", year: "numeric" });
+    var dateOnly = d.getUTCHours() === 0 && d.getUTCMinutes() === 0 &&
+                   d.getUTCSeconds() === 0 && d.getUTCMilliseconds() === 0;
+    return d.toLocaleDateString("en-US", {
+      timeZone: dateOnly ? "UTC" : CT, month: "short", day: "numeric", year: "numeric"
+    });
   }
 
   function ago(iso) {
