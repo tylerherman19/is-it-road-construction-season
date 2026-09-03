@@ -259,6 +259,7 @@ a { color: inherit; }
   pointer-events: none;
 }
 .verdict-badge span {
+  display: inline-block;
   transform: rotate(-45deg);
   font-family: var(--sign);
   font-size: 16px; letter-spacing: .04em;
