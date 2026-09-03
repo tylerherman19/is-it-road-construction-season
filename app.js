@@ -377,19 +377,29 @@
 
   function renderRecords() {
     var section = $("records-section");
-    var rec = state.data && state.data.records;
-    if (!rec || !rec.headline || !rec.top || !rec.top.length) {
-      section.hidden = true;
+    var all = (state.data && state.data.records && state.data.records.all) || [];
+    var inRing = all.filter(function (r) { return r.distance_mi <= state.radius; });
+    section.hidden = false;
+    var fmtMi = function (m) { return m < 1 ? Math.round(m * 10) / 10 : Math.round(m); };
+    if (!inRing.length) {
+      $("record-sign-label").textContent = "CLEAN RECORD";
+      $("record-road").textContent = "Nothing long-running within " + state.radius + " miles";
+      $("record-days").textContent = "\u2013";
+      $("record-board").innerHTML = '<li class="record-row record-empty">' +
+        '<div class="record-main"><div class="record-name">No records inside this ring.</div>' +
+        '<div class="record-meta">Widen the radius - the good stuff is farther out.</div></div></li>';
       return;
     }
-    section.hidden = false;
-    var h = rec.headline;
+    var h = null;
+    for (var i = 0; i < inRing.length; i++) {
+      if (inRing[i].event_class === "closed") { h = inRing[i]; break; }
+    }
+    if (!h) h = inRing[0];
     $("record-sign-label").textContent =
       h.event_class === "closed" ? "LONGEST ACTIVE CLOSURE" : "LONGEST ACTIVE PROJECT";
     $("record-road").textContent = h.road;
     $("record-days").textContent = h.days;
-    var fmtMi = function (m) { return m < 1 ? Math.round(m * 10) / 10 : Math.round(m); };
-    $("record-board").innerHTML = rec.top.map(function (r, i) {
+    $("record-board").innerHTML = inRing.slice(0, 5).map(function (r, i) {
       return '<li class="record-row">' +
         '<span class="record-rank">' + (i + 1) + "</span>" +
         '<span class="record-cls" data-cls="' + r.event_class + '"></span>' +
