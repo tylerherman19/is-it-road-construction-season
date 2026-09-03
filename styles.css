@@ -349,10 +349,10 @@ a { color: inherit; }
   color: #ffb43a;
   text-shadow: 0 0 7px rgba(255,170,40,.5), 0 0 22px rgba(255,170,40,.2);
 }
-.cms-label { font-size: 14.5px; font-weight: 500; letter-spacing: .1em; color: rgba(255,180,58,.82); white-space: nowrap; }
+.cms-label { font-size: 14.5px; font-weight: 500; letter-spacing: .1em; color: #ffb43a; text-shadow: 0 0 7px rgba(255,170,40,.55), 0 0 20px rgba(255,170,40,.22); white-space: nowrap; }
 .cms-num { font-size: 31px; font-weight: 700; letter-spacing: .04em; }
 .cms-head { justify-content: center; border-bottom: 1px dotted rgba(255,180,58,.3); padding: 0 0 9px; margin-bottom: 7px; }
-.cms-head span { font-size: 12.5px; letter-spacing: .2em; color: rgba(255,180,58,.62); text-shadow: 0 0 6px rgba(255,170,40,.35); white-space: nowrap; }
+.cms-head span { font-size: 12.5px; letter-spacing: .2em; color: rgba(255,180,58,.92); text-shadow: 0 0 7px rgba(255,170,40,.5); white-space: nowrap; }
 
 /* the trailer underneath: post, tongue, hitch ball */
 .cms-trailer { position: relative; height: 42px; }
