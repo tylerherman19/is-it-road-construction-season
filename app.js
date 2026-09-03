@@ -17,7 +17,11 @@
   };
   var ORDER = ["closed", "constr", "soon", "season"];
 
-  var $ = function (id) { return document.getElementById(id); };
+  // Missing ids happen when a client holds a cached HTML/JS mix; degrade to a
+  // dummy node so a skewed deploy never crashes the page into the error state.
+  var $ = function (id) {
+    return document.getElementById(id) || $._dummy || ($._dummy = document.createElement("div"));
+  };
 
   var state = {
     data: null,
