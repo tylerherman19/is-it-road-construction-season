@@ -2,11 +2,16 @@ name: Update road data
 
 on:
   schedule:
-    # GitHub runs scheduled workflows on a best-effort queue, so a */15 cron is a
-    # ceiling rather than a promise; the site reports the real age of the data.
-    - cron: "*/15 * * * *"
+    # GitHub's scheduler runs on a best-effort queue and quietly drops most
+    # fires on busy repos: one cron entry measured at one real run every
+    # 2-2.5 hours. Twelve staggered entries buy twelve tickets per hour. The
+    # freshness guard below caps real runs at one every 11 minutes, which also
+    # keeps data pushes under the GitHub Pages 10-builds-per-hour limit; the
+    # site reports the real age of the data regardless.
+    - cron: "2,17,32,47 * * * *"
+    - cron: "6,21,36,51 * * * *"
+    - cron: "11,26,41,56 * * * *"
   workflow_dispatch:
-  # (touch) re-registered 2026-09-03 after the scheduler never fired.
 
 permissions:
   contents: write
@@ -24,17 +29,28 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Skip when the data is still fresh
+        id: fresh
+        run: |
+          age=$(python3 -c "import json,datetime; gen=datetime.datetime.fromisoformat(json.load(open('data.json'))['generated_at']); print(int((datetime.datetime.now(datetime.timezone.utc)-gen).total_seconds()))")
+          echo "data.json age: ${age}s"
+          if [ "$age" -lt 660 ]; then echo "skip=true" >> "$GITHUB_OUTPUT"; else echo "skip=false" >> "$GITHUB_OUTPUT"; fi
+
       - uses: actions/setup-python@v6
+        if: steps.fresh.outputs.skip != 'true'
         with:
           python-version: "3.12"
 
       - name: Install dependencies
+        if: steps.fresh.outputs.skip != 'true'
         run: pip install requests shapely pyproj
 
       - name: Rebuild data.json
+        if: steps.fresh.outputs.skip != 'true'
         run: python scripts/build_data.py
 
       - name: Commit data.json if changed
+        if: steps.fresh.outputs.skip != 'true'
         run: |
           git config user.name "road-construction-robot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

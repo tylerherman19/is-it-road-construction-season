@@ -139,7 +139,7 @@
       $("pulse-text").textContent = "Feed offline";
       $("stat-updated").textContent = String(err.message);
       $("tally-body").innerHTML = '<tr><td colspan="4" class="loading">No data.</td></tr>';
-      $("results").innerHTML = '<li class="results-empty">Nothing to show — the feed is offline.</li>';
+      $("results").innerHTML = '<li class="results-empty">Nothing to show. The feed is offline.</li>';
     });
 
   function boot(data) {
@@ -387,7 +387,7 @@
       $("record-days").textContent = "\u2013";
       $("record-board").innerHTML = '<li class="record-row record-empty">' +
         '<div class="record-main"><div class="record-name">No records inside this ring.</div>' +
-        '<div class="record-meta">Widen the radius - the good stuff is farther out.</div></div></li>';
+        '<div class="record-meta">Widen the radius. The good stuff is farther out.</div></div></li>';
       return;
     }
     var h = null;
@@ -407,7 +407,7 @@
           '<div class="record-name">' + esc(r.road) + "</div>" +
           '<div class="record-meta">' + esc(CLASSES[r.event_class] ? CLASSES[r.event_class].label : r.event_class) +
             " &middot; " + esc(r.source) + " &middot; " + fmtMi(r.distance_mi) +
-            " mi away &middot; since " + esc(r.since) + "</div>" +
+            " mi away" + '<span class="record-since"> &middot; since ' + esc(r.since) + "</span></div>" +
         "</div>" +
         '<div class="record-days-cell"><b>' + r.days + "</b><span>" +
           (r.days === 1 ? "DAY" : "DAYS") + "</span></div>" +
