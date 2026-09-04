@@ -17,11 +17,15 @@
   };
   var ORDER = ["closed", "constr", "soon", "season"];
 
-  var $ = function (id) { return document.getElementById(id); };
+  // Missing ids happen when a client holds a cached HTML/JS mix; degrade to a
+  // dummy node so a skewed deploy never crashes the page into the error state.
+  var $ = function (id) {
+    return document.getElementById(id) || $._dummy || ($._dummy = document.createElement("div"));
+  };
 
   var state = {
     data: null,
-    radius: 20,
+    radius: 10,
     enabled: new Set(ORDER),
     query: "",
     visible: [],       // events passing the current filters, nearest first
@@ -79,7 +83,7 @@
   // publish a calendar date, stored at UTC midnight: rendering that in Central time
   // moves it back a day, which is how a project starting 1 Jan 2025 came out as
   // "Dec 31, 2024". But MnDOT 511 and the closure layers publish real instants, and
-  // an overnight closure beginning 00:00 UTC starts at 7pm the evening before — for
+  // an overnight closure beginning 00:00 UTC starts at 7pm the evening before - for
   // those, Central is the only honest answer. The builder marks which is which,
   // because both reach us as epoch milliseconds and the value alone cannot say.
   function fmtDay(iso, timed) {
@@ -127,7 +131,7 @@
     .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
     .then(boot)
     .catch(function (err) {
-      $("verdict-badge").textContent = "Unknown";
+      $("verdict-badge").innerHTML = "<span>Unknown</span>";
       $("verdict-badge").dataset.state = "error";
       $("verdict-text").textContent =
         "The data feed did not answer, so this page has nothing to report. Like the city of Plymouth, it publishes nothing a machine can read.";
@@ -136,7 +140,7 @@
       $("pulse-text").textContent = "Feed offline";
       $("stat-updated").textContent = String(err.message);
       $("tally-body").innerHTML = '<tr><td colspan="4" class="loading">No data.</td></tr>';
-      $("results").innerHTML = '<li class="results-empty">Nothing to show — the feed is offline.</li>';
+      $("results").innerHTML = '<li class="results-empty">Nothing to show. The feed is offline.</li>';
     });
 
   function boot(data) {
@@ -255,6 +259,7 @@
 
     renderStats();
     renderChipCounts();
+    renderRecords();
     renderList();
     renderTally();
     syncMap();
@@ -273,18 +278,16 @@
     $("stat-closed").textContent = c.closed;
     $("stat-constr").textContent = c.construction;
     $("stat-soon").textContent = c.starting_soon;
-    $("sub-closed").textContent = plural(c.closed, "road shut", "roads shut") + " within " + r + " miles";
-    $("sub-constr").textContent = plural(c.construction, "project", "projects") + " with work on the books";
-    $("sub-soon").textContent = "with a start date still ahead";
+    $("cms-head").textContent = "WITHIN " + r + " MI OF HOME";
 
     var badge = $("verdict-badge"), text = $("verdict-text");
     var total = c.closed + c.construction;
     if (total === 0) {
-      badge.textContent = "No";
+      badge.innerHTML = "<span>No</span>";
       badge.dataset.state = "no";
       text.textContent = "Nothing on the books within " + r + " miles of the house. Enjoy it. It will not last.";
     } else {
-      badge.textContent = "Yes";
+      badge.innerHTML = "<span>Yes</span>";
       badge.dataset.state = "yes";
       if (c.closed > 0) {
         text.textContent = c.closed + " " + plural(c.closed, "road is", "roads are") + " closed and " +
@@ -370,6 +373,46 @@
         '<td class="num" data-label="Under construction">' + c.construction + "</td>" +
         '<td class="num" data-label="Starting soon">' + (c.starting_soon || 0) + "</td>" +
         "</tr>";
+    }).join("");
+  }
+
+  function renderRecords() {
+    var section = $("records-section");
+    var all = (state.data && state.data.records && state.data.records.all) || [];
+    var inRing = all.filter(function (r) { return r.distance_mi <= state.radius; });
+    section.hidden = false;
+    var fmtMi = function (m) { return m < 1 ? Math.round(m * 10) / 10 : Math.round(m); };
+    if (!inRing.length) {
+      $("record-sign-label").textContent = "CLEAN RECORD";
+      $("record-road").textContent = "Nothing long-running within " + state.radius + " miles";
+      $("record-days").textContent = "\u2013";
+      $("record-board").innerHTML = '<li class="record-row record-empty">' +
+        '<div class="record-main"><div class="record-name">No records inside this ring.</div>' +
+        '<div class="record-meta">Widen the radius. The good stuff is farther out.</div></div></li>';
+      return;
+    }
+    var h = null;
+    for (var i = 0; i < inRing.length; i++) {
+      if (inRing[i].event_class === "closed") { h = inRing[i]; break; }
+    }
+    if (!h) h = inRing[0];
+    $("record-sign-label").textContent =
+      h.event_class === "closed" ? "LONGEST ACTIVE CLOSURE" : "LONGEST ACTIVE PROJECT";
+    $("record-road").textContent = h.road;
+    $("record-days").textContent = h.days;
+    $("record-board").innerHTML = inRing.slice(0, 5).map(function (r, i) {
+      return '<li class="record-row">' +
+        '<span class="record-rank">' + (i + 1) + "</span>" +
+        '<span class="record-cls" data-cls="' + r.event_class + '"></span>' +
+        '<div class="record-main">' +
+          '<div class="record-name">' + esc(r.road) + "</div>" +
+          '<div class="record-meta">' + esc(CLASSES[r.event_class] ? CLASSES[r.event_class].label : r.event_class) +
+            " &middot; " + esc(r.source) + " &middot; " + fmtMi(r.distance_mi) +
+            " mi away" + '<span class="record-since"> &middot; since ' + esc(r.since) + "</span></div>" +
+        "</div>" +
+        '<div class="record-days-cell"><b>' + r.days + "</b><span>" +
+          (r.days === 1 ? "DAY" : "DAYS") + "</span></div>" +
+        "</li>";
     }).join("");
   }
 
@@ -679,14 +722,36 @@
 
     if (state.mapReady) {
       state.popup.setLngLat(at).setHTML(popupHtml(e)).addTo(state.map);
+      keepPopupInView(state.popup);
       if (fromList) {
         state.map.easeTo({ center: at, zoom: Math.max(state.map.getZoom(), 11), duration: 600 });
+        window.setTimeout(function () { keepPopupInView(state.popup); }, 700);
       }
     }
   }
 
+  // MapLibre anchors the popup on the tapped point; near a screen edge half the
+  // card lands outside the viewport (the mobile screenshot bug). Pan the map just
+  // enough to bring the whole card back inside.
+  function keepPopupInView(popup) {
+    window.requestAnimationFrame(function () {
+      if (!state.map) return;
+      var el = popup.getElement && popup.getElement();
+      if (!el) return;
+      var r = el.getBoundingClientRect();
+      var m = state.map.getContainer().getBoundingClientRect();
+      var pad = 10;
+      var shiftX = 0, shiftY = 0;
+      if (r.left < m.left + pad) shiftX = (m.left + pad) - r.left;
+      else if (r.right > m.right - pad) shiftX = (m.right - pad) - r.right;
+      if (r.top < m.top + pad) shiftY = (m.top + pad) - r.top;
+      else if (r.bottom > m.bottom - pad) shiftY = (m.bottom - pad) - r.bottom;
+      if (shiftX || shiftY) state.map.panBy([shiftX, shiftY], { duration: 200 });
+    });
+  }
+
   // A GeometryCollection carries its parts in `geometries` and has no `coordinates`
-  // of its own. MapLibre draws them anyway — it splits a collection into its parts —
+  // of its own. MapLibre draws them anyway - it splits a collection into its parts -
   // so skipping them here left thirteen rows that highlighted but never opened a
   // popup or recentred the map.
   function collectPoints(geom, pts) {
