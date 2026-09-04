@@ -17,9 +17,9 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Inter:wght@400;500;600;700&family=Saira+Stencil+One&family=Doto:wght@500;700&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="styles.css?v=20260904a">
 </head>
 <body>
 
@@ -31,7 +31,7 @@
   <div class="wrap topbar-inner">
     <a class="brand" href="#top">
       <span class="brand-mark" aria-hidden="true"></span>
-      <span class="brand-name">Road Construction Season</span>
+      <span class="brand-name">Road Construction</span>
     </a>
     <div class="topbar-meta">
       <span class="pulse" id="pulse" data-state="loading">
@@ -40,8 +40,8 @@
       </span>
       <button type="button" class="icon-btn" id="theme-toggle" aria-label="Switch between light and dark theme">
         <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
-          <path class="icon-sun" d="M12 4V2m0 20v-2m8-8h2M2 12h2m13.66-5.66 1.41-1.41M4.93 19.07l1.41-1.41m0-11.32L4.93 4.93m14.14 14.14-1.41-1.41M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
-          <path class="icon-moon" d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+          <path class="beacon-dome" d="M7.5 15.5a4.5 4.5 0 0 1 9 0z"/>
+          <rect class="beacon-base" x="5.5" y="16.6" width="13" height="2.6" rx="1.2"/>
         </svg>
       </button>
     </div>
@@ -66,27 +66,20 @@
       <div class="segmented" role="radiogroup" aria-labelledby="radius-label" id="radius-group"></div>
     </div>
 
-    <div class="stats" id="stats">
-      <div class="stat" data-cls="closed">
-        <span class="stat-key"><span class="dot" aria-hidden="true"></span>Closed now</span>
-        <span class="stat-num" id="stat-closed">&ndash;</span>
-        <span class="stat-sub" id="sub-closed">roads shut to traffic</span>
+    <div class="cms" id="stats">
+      <div class="cms-frame">
+        <div class="cms-screen">
+          <div class="cms-line cms-head"><span id="cms-head">READING THE FEEDS</span></div>
+          <div class="cms-line"><span class="cms-label">CLOSED NOW</span><span class="cms-num" id="stat-closed">&ndash;</span></div>
+          <div class="cms-line"><span class="cms-label">UNDER CONSTRUCTION</span><span class="cms-num" id="stat-constr">&ndash;</span></div>
+          <div class="cms-line"><span class="cms-label">STARTING SOON</span><span class="cms-num" id="stat-soon">&ndash;</span></div>
+        </div>
       </div>
-      <div class="stat" data-cls="constr">
-        <span class="stat-key"><span class="dot" aria-hidden="true"></span>Under construction</span>
-        <span class="stat-num" id="stat-constr">&ndash;</span>
-        <span class="stat-sub" id="sub-constr">projects with work underway</span>
+      <div class="cms-trailer" aria-hidden="true">
+        <span class="cms-post"></span>
+        <span class="cms-tongue"></span>
       </div>
-      <div class="stat" data-cls="soon">
-        <span class="stat-key"><span class="dot" aria-hidden="true"></span>Starting soon</span>
-        <span class="stat-num" id="stat-soon">&ndash;</span>
-        <span class="stat-sub" id="sub-soon">with a published start date</span>
-      </div>
-      <div class="stat stat-quiet">
-        <span class="stat-key">Feeds reporting</span>
-        <span class="stat-num" id="stat-feeds">&ndash;</span>
-        <span class="stat-sub" id="stat-updated">checking&hellip;</span>
-      </div>
+      <p class="cms-meta"><span id="stat-feeds">&ndash;</span> feeds reporting &middot; <span id="stat-updated">checking&hellip;</span></p>
     </div>
   </div>
 </section>
@@ -133,7 +126,27 @@
     </div>
 
     <p class="note">Distances are straight-line, measured to the nearest point of the affected road. Counts are
-    cumulative &mdash; a closure four miles out appears in every ring beyond it.</p>
+    cumulative: a closure four miles out appears in every ring beyond it.</p>
+  </div>
+</section>
+
+<!-- ---------------- record book ---------------- -->
+<section class="records-section" id="records-section" aria-labelledby="records-title" hidden>
+  <div class="wrap">
+    <div class="section-head">
+      <h2 id="records-title">The record book</h2>
+      <p class="section-sub">Longest-running work still active out there. Day counts from the agencies&rsquo; own start dates, refreshed with the data.</p>
+    </div>
+    <div class="records-grid">
+      <div class="record-sign">
+        <div class="record-sign-head" id="record-sign-label">LONGEST ACTIVE CLOSURE</div>
+        <div class="record-sign-body">
+          <div class="record-sign-road" id="record-road">&ndash;</div>
+          <div class="record-sign-days"><span id="record-days">&ndash;</span><span class="record-sign-unit">DAYS AND<br>COUNTING</span></div>
+        </div>
+      </div>
+      <ol class="record-board" id="record-board"></ol>
+    </div>
   </div>
 </section>
 
@@ -187,7 +200,7 @@
       <div class="col">
         <h3>The small print</h3>
         <p><strong>Closed</strong> means an agency says the road, ramp or bridge is shut. <strong>Under
-        construction</strong> means work is active, or on the books for the season &mdash; county and city
+        construction</strong> means work is active, or on the books for the season: county and city
         layers promise a project, not a blocked lane this morning. <strong>Starting soon</strong> has a
         published start date in the future. Republished with attribution to each agency, for general reference
         only, and not for legal, engineering or surveying use. Not affiliated with MnDOT, which has enough
@@ -211,6 +224,6 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-<script src="app.js"></script>
+<script src="app.js?v=20260904a"></script>
 </body>
 </html>
