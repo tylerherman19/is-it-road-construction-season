@@ -7,6 +7,9 @@ the origin, and writes data.json. Fail-soft per source.
 Sources and field maps: see BUILD_MEMO.md (research memo, 3 Sep 2026).
 """
 import json, math, os, re, sys, time, datetime as dt
+from zoneinfo import ZoneInfo
+
+CT = ZoneInfo("America/Chicago")
 import requests
 from shapely.geometry import shape, Point, LineString, MultiLineString, mapping
 from shapely.ops import transform as shp_transform
@@ -134,7 +137,28 @@ def merge_into(ev, geom):
     ev["distance_mi"] = round(d, 2)
     ev["ring"] = next((r for r in RINGS_MI if d <= r), None)
 
+def plain_road(road):
+    """Translate agency designations into what a person calls the road.
+
+    Nobody says "CSAH 073" out loud. Where the feed hides the local name in a
+    parenthetical ("CSAH 32 (117th Street)"), use that; otherwise decode the
+    prefix. US and Interstate numbers are already how people talk ("US 12",
+    "I-494"), so those pass through.
+    """
+    r = (road or "").strip()
+    m = re.match(r"^[A-Z]{1,12}\s*[0-9]+[A-Z]?\s*\(([^)]+)\)$", r)
+    if m: return m.group(1).strip()
+    m = re.match(r"^(?:CSAH|CR|CTY|RD|COUNTY ROAD|CO RD)\s*0*(\d+[A-Z]?)$", r, re.I)
+    if m: return "County Road " + m.group(1).upper()
+    m = re.match(r"^(?:MN|TH)\s*0*(\d+[A-Z]?)$", r, re.I)
+    if m: return "Highway " + m.group(1).upper()
+    # Compound names ("TH 25 and CR 113"): translate the codes in place.
+    r2 = re.sub(r"\b(?:CSAH|CR)\s*0*(\d+[A-Z]?)\b", lambda m: "County Road " + m.group(1).upper(), r, flags=re.I)
+    r2 = re.sub(r"\b(?:MN|TH)\s*0*(\d+[A-Z]?)\b", lambda m: "Highway " + m.group(1).upper(), r2, flags=re.I)
+    return r2
+
 def add_event(**kw):
+    if kw.get("road"): kw["road"] = plain_road(kw["road"])
     geom = kw.pop("geometry", None)
     if geom is None or geom.is_empty: return
     # Calendar dates are the common case, so only the exceptions ride in the payload.
@@ -302,8 +326,9 @@ def mirror_date(dstr, tstr, end_of_day=False):
     if tstr:
         try:
             t = dt.datetime.strptime(str(tstr).strip(), "%I:%M %p")
-            # feed times are America/Chicago (UTC-5 in Sept, -6 in winter; approximate with -5/-6 by dst)
-            return base.replace(hour=t.hour, minute=t.minute) + dt.timedelta(hours=5), True
+            # feed times are America/Chicago wall clock - attach the real zone (DST-correct)
+            naive = base.replace(hour=t.hour, minute=t.minute, tzinfo=None)
+            return naive.replace(tzinfo=CT), True
         except ValueError:
             pass
     return base + dt.timedelta(days=1 if end_of_day else 0), False
@@ -577,12 +602,44 @@ def run():
     # width limits) are not roadwork and nothing renders them.
     events = sorted((e for e in EVENTS if e["event_class"] in ("closed", "construction")),
                     key=lambda e: e["distance_mi"])
+    # ---- record book ----
+    # Longest-running still-active work, from each event's own start date. Day 1 is
+    # the start date (Central). "Active" matches the counts: active or full-season.
+    today_ct = NOW.astimezone(CT).date()
+    def days_running(e):
+        s = dt.datetime.fromisoformat(e["start"]).astimezone(CT).date()
+        return (today_ct - s).days + 1
+    # Skip records that can't carry a day count honestly: catch-all rows
+    # ("Various") and bare-year starts (a feed that only says "2023" lands on
+    # Jan 1 00:00 UTC, so "day 1343" would be false precision).
+    GENERIC_ROADS = {"various", "various locations", "multiple", "tbd", ""}
+    def recordable(e):
+        if e["road"].strip().lower() in GENERIC_ROADS: return False
+        s = dt.datetime.fromisoformat(e["start"])
+        return not (s.month == 1 and s.day == 1 and s.hour == 0 and s.minute == 0 and s.second == 0)
+    running = [e for e in events
+               if e["temporal"] in ("active", "season") and e.get("start") and recordable(e)]
+    running.sort(key=lambda e: e["start"])
+    # Full recordable list, oldest first - the page filters by the selected ring.
+    # One row per real-world job: agencies split a closure into segments, so two
+    # records with the same road, class and start date are the same job.
+    seen = set()
+    board = []
+    for e in running:
+        key = (e["road"].strip().lower(), e["event_class"], e["start"][:10])
+        if key in seen: continue
+        seen.add(key)
+        board.append({"road": e["road"], "source": e["source"], "event_class": e["event_class"],
+                      "days": days_running(e), "since": e["start"][:10], "distance_mi": e["distance_mi"]})
+    records = {"as_of": today_ct.isoformat(), "all": board}
+
     out = {
         "generated_at": NOW.isoformat(),
         "origin": {"lon": ORIGIN[0], "lat": ORIGIN[1], "label": "Home, Plymouth MN"},
         "rings_miles": RINGS_MI,
         "answer": answer,
         "counts": counts,
+        "records": records,
         "deduped": DEDUPED,
         "degraded": [s["name"] for s in SOURCES_STATUS if s.get("degraded")],
         "sources": SOURCES_STATUS,
