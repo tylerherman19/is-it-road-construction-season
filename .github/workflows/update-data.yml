@@ -28,6 +28,11 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5
+        with:
+          # Fetch the branch's current HEAD at start time, not the SHA pinned
+          # when the run was queued - the concurrency group can hold a run
+          # long enough for that SHA to go stale.
+          ref: main
 
       - name: Skip when the data is still fresh
         id: fresh
@@ -63,7 +68,23 @@ jobs:
           for i in 1 2 3; do
             if git push; then exit 0; fi
             echo "Push rejected, rebasing on origin/main (attempt $i)."
-            git pull --rebase origin main
+            git fetch origin main
+            # data.json is generated, so a concurrent run's version and ours are
+            # equally valid - favor ours (-X theirs in rebase terms). If the
+            # rebase still conflicts, regenerate on top of latest main instead
+            # of merging a generated file by hand.
+            if ! git rebase -X theirs origin/main; then
+              echo "Rebase conflicted; regenerating data.json on latest main."
+              git rebase --abort || true
+              git reset --hard origin/main
+              python scripts/build_data.py
+              git add data.json
+              if git diff --cached --quiet; then
+                echo "No change after regen."
+                exit 0
+              fi
+              git commit -m "data: $(date -u +'%Y-%m-%d %H:%M UTC')"
+            fi
           done
           echo "Could not push after 3 attempts." >&2
           exit 1
