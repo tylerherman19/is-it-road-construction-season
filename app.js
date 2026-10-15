@@ -466,8 +466,13 @@
   }
 
   function dateLine(e) {
-    var s = e.start ? fmtDay(e.start, e.timed) : null;
-    var en = e.end ? fmtDay(e.end, e.timed) : null;
+    // Each endpoint carries its own flag: one record can pair a calendar start with
+    // a timed end. `e.timed` is the older single-flag payload, still read so a
+    // cached data.json from before the split renders the same as it did.
+    var ts = e.timed_start != null ? e.timed_start : e.timed;
+    var te = e.timed_end != null ? e.timed_end : e.timed;
+    var s = e.start ? fmtDay(e.start, ts) : null;
+    var en = e.end ? fmtDay(e.end, te) : null;
     if (s && en) return s + " – " + en;
     if (en) return "through " + en;
     if (s) return "from " + s;
