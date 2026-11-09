@@ -161,9 +161,14 @@ def add_event(**kw):
     if kw.get("road"): kw["road"] = plain_road(kw["road"])
     geom = kw.pop("geometry", None)
     if geom is None or geom.is_empty: return
+    # Start and end can come from different fields on the same record — Carver's
+    # closure layers pair a calendar ANTICIPATEDSTARTDATE with a timed OpenDateTime —
+    # so each endpoint carries its own flag. Collapsing them with `or` formatted a
+    # calendar date in Central and printed the day before.
     # Calendar dates are the common case, so only the exceptions ride in the payload.
-    if not kw.pop("timed", False): kw.pop("timed", None)
-    else: kw["timed"] = True
+    for k in ("timed_start", "timed_end"):
+        if not kw.pop(k, False): kw.pop(k, None)
+        else: kw[k] = True
     d = dist_mi(geom)
     if d is None or d > MAX_MI: return
     if kw.get("temporal") == "expired": return
@@ -266,7 +271,8 @@ def load_511():
         add_event(id=f"cars:{e.get('event-id')}", source="MnDOT 511", event_class=cls,
                   temporal=tmp, road=route or "State highway", description=desc,
                   start=start.isoformat() if start else None,
-                  end=end.isoformat() if end else None, timed=True,
+                  end=end.isoformat() if end else None,
+                  timed_start=True, timed_end=True,
                   url=f"https://511mn.org/event/{e.get('event-id')}", geometry=geom)
         if len(EVENTS) > before:
             seen[key] = len(EVENTS) - 1
@@ -293,7 +299,8 @@ def load_wzdx(data, degraded_from=None):
                   temporal=tmp, road=roads[0] if roads else "State highway",
                   description=core.get("description") or "",
                   start=start.isoformat() if start else None,
-                  end=end.isoformat() if end else None, timed=True,
+                  end=end.isoformat() if end else None,
+                  timed_start=True, timed_end=True,
                   url="https://511mn.org", geometry=geom)
         if len(EVENTS) > before: n += 1
     SOURCES_STATUS.append({"name": "MnDOT 511 (WZDx fallback)", "ok": True, "records": n,
@@ -345,8 +352,8 @@ def load_mirror(degraded_from=None):
         key = (p.get("ID"), phrase)
         if key in seen: continue
         seen.add(key)
-        start, t1 = mirror_date(p.get("IssueDate"), p.get("StartTime"))
-        end, t2 = mirror_date(p.get("ExpireDate"), p.get("EndTime"), end_of_day=True)
+        start, timed_start = mirror_date(p.get("IssueDate"), p.get("StartTime"))
+        end, timed_end = mirror_date(p.get("ExpireDate"), p.get("EndTime"), end_of_day=True)
         tmp = "upcoming" if p.get("STYLE") == "future_event" else temporal(start, end, undated="active")
         geom = feat_geom(f)
         if geom is None: continue
@@ -356,7 +363,8 @@ def load_mirror(degraded_from=None):
                   road=str(p.get("Route") or "State highway"),
                   description=str(p.get("headline") or ""),
                   start=start.isoformat() if start else None,
-                  end=end.isoformat() if end else None, timed=t1 or t2,
+                  end=end.isoformat() if end else None,
+                  timed_start=timed_start, timed_end=timed_end,
                   url=p.get("linktxt") if str(p.get("linktxt") or "").startswith("http") else None,
                   geometry=geom)
         if len(EVENTS) > before: n += 1
@@ -413,9 +421,8 @@ def add_arcgis(name, url, klass, road_fields, desc_fields, start_f, end_f,
     for f in feats:
         p = props(f)
         if skip_fn and skip_fn(p): continue
-        start, t1 = field_dt(p, start_f)
-        end, t2 = field_dt(p, end_f, end_of=True)
-        timed = t1 or t2
+        start, timed_start = field_dt(p, start_f)
+        end, timed_end = field_dt(p, end_f, end_of=True)
         tmp = temporal(start, end, undated=undated)
         geom = feat_geom(f)
         if geom is None: continue
@@ -445,7 +452,7 @@ def add_arcgis(name, url, klass, road_fields, desc_fields, start_f, end_f,
                   road=road, description=desc,
                   start=start.isoformat() if start else None,
                   end=end.isoformat() if end else None,
-                  timed=timed,
+                  timed_start=timed_start, timed_end=timed_end,
                   url=link if isinstance(link, str) and link.startswith("http") else None,
                   geometry=geom)
         if len(EVENTS) > before:
