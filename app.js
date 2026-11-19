@@ -278,14 +278,14 @@
     $("stat-closed").textContent = c.closed;
     $("stat-constr").textContent = c.construction;
     $("stat-soon").textContent = c.starting_soon;
-    $("cms-head").textContent = "WITHIN " + r + " MI OF HOME";
+    $("cms-head").textContent = "WITHIN " + r + " MI OF CITY HALL";
 
     var badge = $("verdict-badge"), text = $("verdict-text");
     var total = c.closed + c.construction;
     if (total === 0) {
       badge.innerHTML = "<span>No</span>";
       badge.dataset.state = "no";
-      text.textContent = "Nothing on the books within " + r + " miles of the house. Enjoy it. It will not last.";
+      text.textContent = "Nothing on the books within " + r + " miles of City Hall. Enjoy it. It will not last.";
     } else {
       badge.innerHTML = "<span>Yes</span>";
       badge.dataset.state = "yes";
@@ -651,12 +651,12 @@
     });
 
     // Markers live outside the style, so they survive a theme swap; adding one per
-    // addLayers() call would stack a new pin on the house every toggle.
-    if (!state.homeMarker) {
+    // addLayers() call would stack a new pin on City Hall every toggle.
+    if (!state.originMarker) {
       var el = document.createElement("div");
-      el.className = "home-marker";
-      el.textContent = "Home";
-      state.homeMarker = new maplibregl.Marker({ element: el, anchor: "bottom" })
+      el.className = "origin-marker";
+      el.textContent = "City Hall";
+      state.originMarker = new maplibregl.Marker({ element: el, anchor: "bottom" })
         .setLngLat(o).addTo(state.map);
     }
 
@@ -779,7 +779,7 @@
     var rows = "";
     var dl = dateLine(e);
     if (dl) rows += "<dt>Dates</dt><dd>" + esc(dl) + "</dd>";
-    rows += "<dt>Distance</dt><dd>" + e.distance_mi.toFixed(1) + " mi from home</dd>";
+    rows += "<dt>Distance</dt><dd>" + e.distance_mi.toFixed(1) + " mi from City Hall</dd>";
     rows += "<dt>Source</dt><dd>" + esc(e.source || "unknown") + "</dd>";
 
     var link = "";
