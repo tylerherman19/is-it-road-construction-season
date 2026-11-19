@@ -626,7 +626,7 @@ a { color: inherit; }
 .pop-link { display: inline-block; margin-top: 10px; font-size: 12.5px; font-weight: 600; color: var(--soon); text-decoration: none; }
 .pop-link:hover { text-decoration: underline; }
 
-.home-marker {
+.origin-marker {
   display: flex; align-items: center; gap: 6px;
   font-family: var(--ui); font-size: 11px; font-weight: 700;
   letter-spacing: .06em; text-transform: uppercase;
@@ -635,7 +635,7 @@ a { color: inherit; }
   box-shadow: var(--shadow-md);
   white-space: nowrap;
 }
-.home-marker::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--constr); }
+.origin-marker::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--constr); }
 
 /* ---------------- tally ---------------- */
 .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--surface); }

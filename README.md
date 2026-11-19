@@ -1,8 +1,11 @@
 # Is It Road Construction Season?
 
 Live counts of closed / under-construction / starting-soon roads within 5, 10, 20
-and 50 miles of a particular driveway in Plymouth, MN 55446, plus an interactive
+and 50 miles of Plymouth City Hall, MN, plus an interactive
 map of every project the agencies will admit to.
+
+The public ring center is Plymouth City Hall, 3400 Plymouth Blvd
+(45.01932, -93.47482), not a residential location.
 
 - Static site, no build step. MapLibre GL + OpenFreeMap (no tokens, no API keys).
 - `scripts/build_data.py` pulls MnDOT 511 (CARS events REST, with WZDx and an

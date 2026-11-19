@@ -15,7 +15,7 @@ from shapely.geometry import shape, Point, LineString, MultiLineString, mapping
 from shapely.ops import transform as shp_transform
 from pyproj import Transformer
 
-ORIGIN = (-93.4594, 45.0394)  # lon, lat - Plymouth MN 55446 (the house)
+ORIGIN = (-93.47482, 45.01932)  # lon, lat - Plymouth City Hall, 3400 Plymouth Blvd
 RINGS_MI = [5, 10, 20, 50]
 MAX_MI = 50.0
 UA = "is-it-road-construction-season/1.0 (+https://github.com/tylerherman19/is-it-road-construction-season)"
@@ -635,7 +635,7 @@ def run():
 
     out = {
         "generated_at": NOW.isoformat(),
-        "origin": {"lon": ORIGIN[0], "lat": ORIGIN[1], "label": "Home, Plymouth MN"},
+        "origin": {"lon": ORIGIN[0], "lat": ORIGIN[1], "label": "Plymouth City Hall, MN"},
         "rings_miles": RINGS_MI,
         "answer": answer,
         "counts": counts,
